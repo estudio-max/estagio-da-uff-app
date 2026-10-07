@@ -21,7 +21,7 @@ Os comandos de instalação, emuladores e pipeline entram aqui na Fase 0.
 
 | Ferramenta | Situação |
 |---|---|
-| Flutter 3.47.6 (estável), Dart 3.13.5 | Instalado em `C:\srclutter`, no PATH do usuário |
+| Flutter 3.47.6 (estável), Dart 3.13.5 | Instalado em `C:\src\flutter`, no PATH do usuário |
 | Firebase CLI 15.32.1 | Instalado (`npm install -g firebase-tools`) |
 | Web (Chrome) | Pronto |
 | Android | Falta SDK 36 e Build Tools 28.0.3 (Android Studio → SDK Manager) |
