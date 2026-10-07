@@ -16,3 +16,13 @@ A versão Django em funcionamento, que é a referência funcional e de testes, e
 - Java 21 (Firebase Emulator Suite) e Node.js (Cloud Functions).
 
 Os comandos de instalação, emuladores e pipeline entram aqui na Fase 0.
+
+### Estado na máquina de desenvolvimento (07/10/2026)
+
+| Ferramenta | Situação |
+|---|---|
+| Flutter 3.47.6 (estável), Dart 3.13.5 | Instalado em `C:\srclutter`, no PATH do usuário |
+| Firebase CLI 15.32.1 | Instalado (`npm install -g firebase-tools`) |
+| Web (Chrome) | Pronto |
+| Android | Falta SDK 36 e Build Tools 28.0.3 (Android Studio → SDK Manager) |
+| Windows desktop | Fora do plano (exigiria completar o Visual Studio) |

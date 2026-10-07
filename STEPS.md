@@ -14,7 +14,7 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
 ## Fase 0 — Fundação
 
 - **Inclui:**
-  - Flutter SDK e Firebase CLI instalados (feito nesta máquina em 07/10/2026);
+  - Flutter SDK e Firebase CLI instalados (feito nesta máquina em 07/10/2026; Android SDK 36 pendente, ver README);
   - projeto Flutter (`flutter create`), lint (`flutter analyze` com `very_good_analysis` ou `flutter_lints`) e formatação (`dart format`);
   - projetos Firebase `dev` e `prod` na região `southamerica-east1`;
   - Emulator Suite (Auth, Data Connect/Firestore, Functions, Hosting);
