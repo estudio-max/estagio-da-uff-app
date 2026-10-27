@@ -4,7 +4,7 @@ Estado em 07/10/2026: documentação inicial. **Próxima: decisões D23, D24 e D
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
-| 0 | Fundação: ferramentas, projetos Firebase, emuladores, CI, protótipo | Em andamento: `firebase.json`, `.firebaserc`, regras fechadas e emuladores (Auth, Firestore, Hosting) validados; projeto Flutter criado (android, ios, web; `flutter_lints`; analyze, format e teste de fumaça verdes) e testes de regras do Firestore (`npm run test:rules`); faltam Functions, `prod`, CI e protótipo | Média |
+| 0 | Fundação: ferramentas, projetos Firebase, emuladores, CI, protótipo | Em andamento: `firebase.json`, `.firebaserc`, regras fechadas e emuladores (Auth, Firestore, Hosting) validados; projeto Flutter criado (android, ios, web; `flutter_lints`; analyze, format e teste de fumaça verdes) e testes de regras do Firestore (`npm run test:rules`); pipeline local `tools/ci` (format, analyze, testes Flutter e de regras) verde; faltam Functions, `prod`, GitHub Actions e protótipo | Média |
 | 1 | MVP de convênios com paridade à versão Django | Pendente | Média |
 | 2 | Solicitação externa via gov.br | Pendente | Média |
 | 3 | TCE e ciclo do estágio | Fora do escopo atual | Alta |
