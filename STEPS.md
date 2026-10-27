@@ -1,6 +1,6 @@
 # STEPS — Sistema de Estágios UFF (app Flutter + Firebase)
 
-Estado em 07/10/2026: documentação inicial. **Próxima: decisões D23, D24 e D25 com o cliente; depois a Fase 0.**
+Estado em 27/10/2026: **Fase 0 quase fechada** (PR 1 aguardando revisão). Falta só o projeto `prod`, que depende da D25. **Próximo: revisar e mergear o PR 1; decidir D25 (dono da conta Google Cloud) e D24 (página pública); depois a Fase 1.** A Fase 1 não começa antes de a Fase 0 fechar.
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
