@@ -1,9 +1,14 @@
 rules_version = '2';
 
-// Fase 0: tudo fechado. As regras reais (papel `divisao`, RN04 e RN08) entram
-// na Fase 1, com os testes de regras no emulador.
+// Fase 0 (protótipo): só leitura de `convenios` para usuário autenticado; todo
+// o resto fechado. As regras reais (papel `divisao`, RN04 e RN08) entram na
+// Fase 1, com os testes de regras no emulador.
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /convenios/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

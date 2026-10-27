@@ -1,30 +1,48 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:estagios_uff/auth/login_page.dart';
+import 'package:estagios_uff/convenios/convenio.dart';
+import 'package:estagios_uff/convenios/convenios_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:estagios_uff/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('lista de convênios abre a tela do convênio', (tester) async {
+    final convenio = Convenio.fromMap('1', {
+      'concedente': 'Empresa Fictícia',
+      'status': 'Vigente',
+      'vigencia_fim': '2027-03-05',
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConveniosPage(convenios: Stream.value([convenio]), onSair: () {}),
+      ),
+    );
     await tester.pump();
+    expect(find.text('Empresa Fictícia'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Empresa Fictícia'));
+    await tester.pumpAndSettle();
+    expect(find.text('Situação: Vigente'), findsOneWidget);
+    expect(find.text('Vigência até: 05/03/2027'), findsOneWidget);
+  });
+
+  testWidgets('lista vazia avisa o usuário', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ConveniosPage(convenios: Stream.value([]), onSair: () {}),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Nenhum convênio cadastrado.'), findsOneWidget);
+  });
+
+  testWidgets('login com falha mostra erro', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LoginPage(onEntrar: (_, _) async => throw Exception('x')),
+      ),
+    );
+    await tester.tap(find.text('Entrar'));
+    await tester.pumpAndSettle();
+    expect(find.text('E-mail ou senha inválidos.'), findsOneWidget);
   });
 }
