@@ -87,7 +87,7 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 |---|---|---|
 | B1 | Repositório novo; a versão Django é a referência funcional e de testes | Decidida em 07/10/2026 |
 | B2 | Flutter para o app da Divisão (Android, iOS, web) | Pedido do cliente |
-| B3 | Banco: Firestore (opção A). Data Connect fica como alternativa a reavaliar antes da Fase 3 | Decidida em 27/10/2026 (D23), a confirmar com a PROGRAD |
+| B3 | Banco: Firestore (opção A). Data Connect fica como alternativa a reavaliar antes da Fase 3 | Decidida e confirmada pela PROGRAD em 27/10/2026 (D23) |
 | B7 | Projeto Firebase `dev` = `estagiosuff` (já existente, conta cosmefc@id.uff.br); desenvolvimento local no emulador com o projeto fictício `demo-estagios-uff`; `prod` ainda não criado | Proposta |
 | B4 | Página pública em HTML no Hosting, não em Flutter web | **Pendente — D24** |
 | B5 | Functions em TypeScript (melhor suporte no Firebase e nos emuladores) | Proposta |
