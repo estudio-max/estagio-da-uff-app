@@ -15,3 +15,5 @@ conveniosestagio.xml
 reports/
 # Node (Functions)
 node_modules/
+.idea/
+*.iml
