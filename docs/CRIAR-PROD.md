@@ -1,10 +1,10 @@
 # Criar o projeto Firebase `prod`
 
-Quem executa: **Cosme (cosmefc@id.uff.br)**, dono da conta Google Cloud (D25, 28/10/2026). Nada disso é feito pelo Claude nem pela CI: é uma ação manual na conta dele.
+Quem executa: **Cosme (cosmefc@id.uff.br)**, dono da conta Google Cloud e pagador (D25, 28/10/2026). Nada disso é feito pelo Claude nem pela CI: é uma ação manual na conta dele.
 
 ## Antes de começar
 
-- **Quem paga o plano Blaze?** As Functions e o Hosting com domínio próprio exigem o plano Blaze (pago por uso; para o volume atual o custo esperado é zero). Pendência de D25: definir o pagador antes de ativar o faturamento.
+- **Plano Blaze:** as Functions e o Hosting com domínio próprio exigem o plano Blaze (pago por uso; para o volume atual o custo esperado é zero). Dono e pagador: Cosme (D25, decidido em 28/10/2026), que ativa o faturamento na conta dele.
 - Confirmar o nome do projeto. Proposta: `estagios-uff-prod`. O `dev` é `estagiosuff`.
 
 ## Passos
@@ -13,7 +13,7 @@ Quem executa: **Cosme (cosmefc@id.uff.br)**, dono da conta Google Cloud (D25, 28
 2. **Firestore:** criar o banco `(default)` no modo produção, na região `southamerica-east1` (B6). As regras vêm do repositório (`firestore.rules`), nunca editadas pelo console.
 3. **Authentication:** habilitar só o provedor que a Fase 1 usar. O login gov.br é da Fase 2 (D10).
 4. **Hosting:** habilitar o site padrão. Domínio próprio fica para depois (depende da STI).
-5. **Plano Blaze:** ativar somente após o pagador ser definido.
+5. **Plano Blaze:** o Cosme ativa o faturamento.
 6. Dar acesso (papel Editor ou menor) só às pessoas da equipe que fazem o deploy.
 
 ## O que registrar no repositório (em PR)

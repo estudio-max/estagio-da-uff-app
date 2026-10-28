@@ -1,6 +1,6 @@
 # STEPS — Sistema de Estágios UFF (app Flutter + Firebase)
 
-Estado em 28/10/2026: **Fase 0 quase fechada** (PR 1 aguardando aprovação no GitHub). Falta só criar o projeto `prod`, que cabe ao Cosme, dono da conta (D25); passo a passo em `docs/CRIAR-PROD.md`. D24 decidida: página pública em HTML gerado. **Próximo: mergear o PR 1; o Cosme criar o `prod`; depois a Fase 1.** A Fase 1 não começa antes de a Fase 0 fechar.
+Estado em 28/10/2026: **Fase 0 quase fechada**. Falta só criar o projeto `prod`, que cabe ao Cosme, dono da conta e pagador (D25 decidida); passo a passo em `docs/CRIAR-PROD.md`. D24 decidida: página pública em HTML gerado. **Próximo: o Cosme criar o `prod`; depois a Fase 1.** A Fase 1 não começa antes de a Fase 0 fechar.
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
