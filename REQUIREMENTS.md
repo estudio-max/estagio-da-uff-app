@@ -2,7 +2,9 @@
 
 > **Origem:** requisitos herdados de [estudio-max/estagio-da-uff](https://github.com/estudio-max/estagio-da-uff) (versão Django), que segue como **referência funcional e de testes**. O "o quê" não muda com a plataforma; o "como" está em `ARCHITECTURE.md`.
 > Status abaixo é **desta** plataforma: tudo pendente. Onde diz "referência pronta no Django", a regra já foi implementada e testada lá; os testes de lá são a especificação daqui.
-> Decisão de plataforma: `docs/DECISAO-PLATAFORMA.md` (D23 e D24 em aberto).
+> Decisão de plataforma: `docs/DECISAO-PLATAFORMA.md` (D23, D24 e D25 decididas).
+>
+> **Contexto: projeto piloto.** Será apresentado à PROGRAD; depois de funcional, migra para a infraestrutura da UFF. Por ora a STI é ignorada (hospedagem no Firebase, conta do Cosme). Na migração, reavaliar hospedagem, dados, LGPD e SEI com a STI.
 
 
 ## 1. Objetivo
@@ -233,6 +235,6 @@ TCE e ciclo do estágio, integração com sistema acadêmico, assinatura digital
 | D21 | Na primeira execução dos alertas em produção, 471 convênios cairiam num único email. Como começar? | (a) mandar assim, como relatório inicial; (b) começar só com a faixa de 30 dias; (c) marcar os atuais como já avisados | PROGRAD |
 | D22 | O painel mostra renovação de só 4% (434 das 453 concedentes cujo convênio venceu nos últimos 12 meses não têm outro ativo). É real ou a renovação costuma vir com outro CNPJ (filial, matriz) ou sem CNPJ no Drupal? | (a) real: virar ação de contato; (b) efeito dos dados: ligar renovações ao convênio anterior | PROGRAD |
 | D23 | Banco: Firestore (documentos) ou Firebase Data Connect (PostgreSQL)? | **Decidida e confirmada pela PROGRAD em 27/10/2026: Firestore (opção A)**. Reavaliar antes da Fase 3. Ver `docs/DECISAO-PLATAFORMA.md` | Cliente + equipe |
-| D24 | Página pública em Flutter web ou em HTML gerado (Firebase Hosting)? Flutter web indexa mal no Google e é pior para leitor de tela | (a) HTML gerado por Cloud Function; (b) Flutter web | Cliente + equipe |
-| D25 | A "burocracia" a evitar é a de hospedagem (servidor da STI) ou a de aprovação (comitês)? LGPD, guarda no SDC e SEI continuam valendo no Firebase | — | Cliente |
+| D24 | Página pública em Flutter web ou em HTML gerado (Firebase Hosting)? Flutter web indexa mal no Google e é pior para leitor de tela | **Decidida em 28/10/2026: (a) HTML gerado por Cloud Function**, servido pelo Firebase Hosting. Flutter web fica só para o painel da Divisão. | Cliente + equipe |
+| D25 | A "burocracia" a evitar é a de hospedagem (servidor da STI) ou a de aprovação (comitês)? LGPD, guarda no SDC e SEI continuam valendo no Firebase | **Decidida em 28/10/2026:** a burocracia a evitar é a de **hospedagem**; a hospedagem fica na estrutura do Firebase. Dono da conta Google Cloud e pagador do plano Blaze: **Cosme (cosmefc@id.uff.br)**. | Cliente |
 | D10 | Credenciamento gov.br da UFF para login único (Fase 2) já existe? | — | STI |

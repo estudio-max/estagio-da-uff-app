@@ -1,6 +1,6 @@
 # STEPS — Sistema de Estágios UFF (app Flutter + Firebase)
 
-Estado em 27/10/2026: **Fase 0 quase fechada** (PR 1 aguardando revisão). Falta só o projeto `prod`, que depende da D25. **Próximo: revisar e mergear o PR 1; decidir D25 (dono da conta Google Cloud) e D24 (página pública); depois a Fase 1.** A Fase 1 não começa antes de a Fase 0 fechar.
+Estado em 28/10/2026: **Fase 0 quase fechada**. Falta só criar o projeto `prod`, que cabe ao Cosme, dono da conta e pagador (D25 decidida); passo a passo em `docs/CRIAR-PROD.md`. D24 decidida: página pública em HTML gerado. Projeto piloto para a PROGRAD; a STI é ignorada até a migração para a UFF. **Próximo: o Cosme criar o `prod`; depois a Fase 1.** A Fase 1 não começa antes de a Fase 0 fechar.
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
@@ -20,7 +20,7 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
   - Emulator Suite (Auth, Data Connect/Firestore, Functions, Hosting);
   - pipeline local `tools/ci` e GitHub Actions (analyze, format, testes Flutter, testes das Functions, testes de regras/`@auth` no emulador);
   - um protótipo mínimo: login → lista de convênios → tela de convênio, contra o emulador.
-- **Pré-requisitos:** D23 (banco) decidido; conta Google Cloud com dono definido (D25).
+- **Pré-requisitos:** D23 (banco) decidido; conta Google Cloud com dono definido (D25: Cosme, cosmefc@id.uff.br, definido em 28/10/2026).
 - **Critério de conclusão:** pipeline local e CI verdes; o protótipo roda no navegador e num emulador Android.
 - **Riscos:** curva de aprendizado de Dart/Flutter; o Data Connect é um produto mais novo que o Firestore.
 
