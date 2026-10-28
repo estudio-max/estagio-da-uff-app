@@ -37,7 +37,7 @@ npm run seed                                           # terminal 2: dados e usu
 flutter run -d chrome                                  # terminal 2: o app
 ```
 
-O usuário fictício do seed está em `tools/seed.mjs`. Antes de abrir PR: `./tools/ci` (formatação, análise, testes Flutter, de regras e das Functions); o GitHub Actions roda o mesmo script.
+O seed cria `divisao@exemplo.test` (papel `divisao`, vê tudo) e `externo@exemplo.test` (sem papel, é barrado), ambos com a senha `senha-de-teste`, 6 concedentes e 7 convênios fictícios (`tools/seed.mjs`). Antes de abrir PR: `./tools/ci` (formatação, análise, testes Flutter, de regras e das Functions); o GitHub Actions roda o mesmo script.
 
 ### Android
 

@@ -35,14 +35,14 @@ Diretriz da reunião: **separar o "o quê" do "como"**. O "o quê" do processo a
 
 | ID | Requisito | Status |
 |---|---|---|
-| RF01 | Cadastrar convênio: concedente (razão social, CNPJ, tipo — ver RN05), nº do convênio, nº do processo SEI, modalidade de minuta (padrão UFF / externa), datas de início e fim de vigência, situação, observações internas. | Pendente — referência pronta no Django (1a) |
-| RF02 | Registrar o andamento interno do processo (etapas: documentação recebida, análise, termo preparado, assinatura concedente, assinatura pró-reitor, ratificação, publicação do extrato no BS, finalizado). | Pendente — referência pronta no Django (1a) |
+| RF01 | Cadastrar convênio: concedente (razão social, CNPJ, tipo — ver RN05), nº do convênio, nº do processo SEI, modalidade de minuta (padrão UFF / externa), datas de início e fim de vigência, situação, observações internas. | Implementado no app (1a): cadastro de concedente e de convênio, com RN03, RN05, RN06 e RN07 |
+| RF02 | Registrar o andamento interno do processo (etapas: documentação recebida, análise, termo preparado, assinatura concedente, assinatura pró-reitor, ratificação, publicação do extrato no BS, finalizado). | Implementado no app (1a): etapas registradas no detalhe do convênio |
 | RF03 | Marcar, por campo, o que é público. Definição pela PROGRAD. Hoje é fixa no template, espelhando o site atual; CPF nunca é público. | Pendente — referência pronta no Django (1c) |
 | RF04 | Página pública com convênios vigentes, com busca por nome/CNPJ/tipo. Convênio entra na página automaticamente ao ser finalizado. | Pendente — referência pronta no Django (1c) |
 | RF05 | Alertas de vencimento para a Divisão (e-mail e painel), com antecedências configuráveis. | Pendente — referência pronta no Django (1d) |
 | RF06 | Painéis estratégicos: vigentes, encerrados/vencidos, vencendo em 30/90/180 dias, em tramitação, por tipo de concedente. Visibilidade (pública/privada) definida pela PROGRAD. | Pendente — referência pronta no Django (1e) |
 | RF07 | Importar os dados atuais das planilhas (públicos e privados) e da página do site. | Pendente — referência pronta no Django (1b) |
-| RF08 | Histórico de alterações de cada convênio (quem, quando, o quê). | Pendente — referência pronta no Django (1a) |
+| RF08 | Histórico de alterações de cada convênio (quem, quando, o quê). | Implementado no app (1a): quem, quando e quais campos (D17, opção a, sem valor anterior) |
 ### Média prioridade — Fase 2 (entrada externa)
 
 | ID | Requisito | Status |
