@@ -2,7 +2,9 @@
 
 > **Origem:** requisitos herdados de [estudio-max/estagio-da-uff](https://github.com/estudio-max/estagio-da-uff) (versão Django), que segue como **referência funcional e de testes**. O "o quê" não muda com a plataforma; o "como" está em `ARCHITECTURE.md`.
 > Status abaixo é **desta** plataforma: tudo pendente. Onde diz "referência pronta no Django", a regra já foi implementada e testada lá; os testes de lá são a especificação daqui.
-> Decisão de plataforma: `docs/DECISAO-PLATAFORMA.md` (D23 e D24 em aberto).
+> Decisão de plataforma: `docs/DECISAO-PLATAFORMA.md` (D23, D24 e D25 decididas).
+>
+> **Contexto: projeto piloto.** Será apresentado à PROGRAD; depois de funcional, migra para a infraestrutura da UFF. Por ora a STI é ignorada (hospedagem no Firebase, conta do Cosme). Na migração, reavaliar hospedagem, dados, LGPD e SEI com a STI.
 
 
 ## 1. Objetivo
