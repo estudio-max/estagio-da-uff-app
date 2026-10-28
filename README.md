@@ -44,3 +44,5 @@ O seed cria `divisao@exemplo.test` (papel `divisao`, vê tudo) e `externo@exempl
 No emulador Android o app usa `10.0.2.2` para chegar aos emuladores do Firebase; o manifesto de **debug** libera HTTP sem criptografia (`usesCleartextTraffic`), pois eles falam HTTP. O manifesto de release não tem essa permissão. Em máquinas com pouca memória, limite o Gradle em `~/.gradle/gradle.properties` (ex.: `org.gradle.jvmargs=-Xmx2G`), porque o padrão do projeto pede 8 GB.
 
 Para publicar a demonstração na nuvem (projeto `dev`), ver `docs/DEMO-NUVEM.md`.
+
+Manual para quem usa o sistema (linguagem simples): `docs/MANUAL-USUARIO.md`.
