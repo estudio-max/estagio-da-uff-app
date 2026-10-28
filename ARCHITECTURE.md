@@ -60,6 +60,13 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 
 "Vigência" (vigente, vencido, a iniciar) continua **derivada** das datas (RN02), calculada no app e nas Functions, nunca gravada.
 
+**Como a 1a ficou implementada (opção A):**
+- `concedentes/{id}`, `convenios/{id}` (com `concedente_nome` copiado), `convenios/{id}/etapas/{id}` e `convenios/{id}/historico/{id}`. Datas em texto ISO (`aaaa-mm-dd`).
+- **Histórico (RF08):** o app grava o registro na mesma operação em lote da alteração. As regras exigem `por == uid` e `em == request.time` e proíbem editar ou apagar o registro. D17 (a): quem, quando e quais campos, sem o valor anterior.
+- **Regras (RN04):** só o papel `divisao` lê e escreve; ninguém exclui. As regras barram as invariantes estruturais (fim depois do início, finalizado exige número e datas, listas fechadas). O dígito verificador (RN03) e a vigência máxima (RN07) ficam no domínio Dart, com testes.
+- **Dívida conhecida:** a unicidade de `numero` e de `documento` é checada no app antes de gravar, sem transação; duas pessoas gravando o mesmo número ao mesmo tempo poderiam duplicar. Garantia total: coleção-índice (ver acima), a fazer se virar problema.
+- **Dívida conhecida:** `concedente_nome` é atualizado pelo app ao editar a concedente; a Function de sincronia fica para depois.
+
 ## 4. Autenticação e autorização
 
 - **Divisão de Estágio:** papel `divisao` via *custom claim* do Firebase Auth, atribuído por Function administrativa. Só ela escreve (RN04).

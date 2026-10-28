@@ -1,11 +1,11 @@
 # STEPS — Sistema de Estágios UFF (app Flutter + Firebase)
 
-Estado em 28/10/2026: **Fase 0 quase fechada**. Falta só criar o projeto `prod`, que cabe ao Cosme, dono da conta e pagador (D25 decidida); passo a passo em `docs/CRIAR-PROD.md`. D24 decidida: página pública em HTML gerado. Projeto piloto para a PROGRAD; a STI é ignorada até a migração para a UFF. **Próximo: o Cosme criar o `prod`; depois a Fase 1.** A Fase 1 não começa antes de a Fase 0 fechar.
+Estado em 28/10/2026: **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme, `docs/CRIAR-PROD.md`; não bloqueia a Fase 1, que usa só os emuladores). **Fase 1 aberta por exceção, decidida em 28/10/2026 (projeto piloto): incremento 1a em andamento** (concedentes, convênios, etapas e histórico, com regras reais do Firestore). A STI é ignorada até a migração para a UFF.
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
 | 0 | Fundação: ferramentas, projetos Firebase, emuladores, CI, protótipo | Em andamento: `firebase.json`, `.firebaserc`, regras fechadas e emuladores (Auth, Firestore, Hosting) validados; projeto Flutter criado (android, ios, web; `flutter_lints`; analyze, format e teste de fumaça verdes) e testes de regras do Firestore (`npm run test:rules`); pipeline local `tools/ci` verde e GitHub Actions (`.github/workflows/ci.yml`, ainda não rodou no GitHub); Functions em TypeScript com teste; protótipo (login, lista e tela de convênio) funcionando no navegador contra os emuladores, com seed fictício. protótipo também validado num emulador Android (login, lista e tela de convênio). **Falta: `prod` (bloqueado por D25)** | Média |
-| 1 | MVP de convênios com paridade à versão Django | Pendente | Média |
+| 1 | MVP de convênios com paridade à versão Django | Em andamento: **1a** feita no app (domínio, regras do Firestore, telas e histórico, com os casos de teste portados); falta homologar. 1b a 1e pendentes | Média |
 | 2 | Solicitação externa via gov.br | Pendente | Média |
 | 3 | TCE e ciclo do estágio | Fora do escopo atual | Alta |
 

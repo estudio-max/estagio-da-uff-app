@@ -1,14 +1,85 @@
 rules_version = '2';
 
-// Fase 0 (protótipo): só leitura de `convenios` para usuário autenticado; todo
-// o resto fechado. As regras reais (papel `divisao`, RN04 e RN08) entram na
-// Fase 1, com os testes de regras no emulador.
+// Fase 1a. RN04: só o papel `divisao` (custom claim) lê e escreve; ninguém exclui
+// (convênio errado vira "cancelado"). A página pública (1c) não lê o Firestore
+// direto: ela é servida por Function, que nunca devolve o CPF (RN08).
+// Dígito verificador do documento e vigência máxima de 5 anos (RN03, RN07) são
+// validados no app e no domínio; aqui ficam só as invariantes estruturais.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /convenios/{id} {
-      allow read: if request.auth != null;
-      allow write: if false;
+
+    function divisao() {
+      return request.auth != null && request.auth.token.get('divisao', false) == true;
     }
+
+    function textoOuNulo(campo) {
+      return request.resource.data[campo] == null || request.resource.data[campo] is string;
+    }
+
+    function dataValida() {
+      let d = request.resource.data;
+      return textoOuNulo('inicio_vigencia') && textoOuNulo('fim_vigencia')
+        && (d.inicio_vigencia == null || d.fim_vigencia == null
+            || d.fim_vigencia > d.inicio_vigencia);
+    }
+
+    function finalizadoCompleto() {
+      let d = request.resource.data;
+      return d.situacao != 'finalizado'
+        || (d.numero is string && d.numero != ''
+            && d.inicio_vigencia is string && d.fim_vigencia is string);
+    }
+
+    function convenioValido() {
+      let d = request.resource.data;
+      return d.situacao in ['em_tramitacao', 'finalizado', 'cancelado']
+        && d.minuta in ['padrao_uff', 'externa']
+        && d.origem in ['concedente', 'uff']
+        && d.concedente_id is string && d.concedente_id != ''
+        && d.numero is string
+        && dataValida() && finalizadoCompleto();
+    }
+
+    function concedenteValido() {
+      let d = request.resource.data;
+      return d.tipo in ['ensino_privada', 'empresa_privada', 'ong_oscip', 'orgao_publico',
+                        'profissional_liberal', 'agente_integracao', 'ensino_publica',
+                        'microempresa', 'outros']
+        && d.razao_social is string && d.razao_social != ''
+        && d.documento is string && d.documento.size() in [11, 14];
+    }
+
+    match /concedentes/{id} {
+      allow read: if divisao();
+      allow create, update: if divisao() && concedenteValido();
+      allow delete: if false;
+    }
+
+    match /convenios/{id} {
+      allow read: if divisao();
+      allow create, update: if divisao() && convenioValido();
+      allow delete: if false;
+
+      match /etapas/{etapaId} {
+        allow read: if divisao();
+        allow create, update: if divisao()
+          && request.resource.data.etapa in ['documentacao_recebida', 'analise', 'termo_preparado',
+                                             'assinatura_concedente', 'assinatura_pro_reitor',
+                                             'ratificacao', 'extrato_bs', 'outra']
+          && request.resource.data.data is string;
+        allow delete: if false;
+      }
+
+      // RF08: só se acrescenta; nunca se edita nem se apaga. Quem e quando vêm do servidor.
+      match /historico/{registroId} {
+        allow read: if divisao();
+        allow create: if divisao()
+          && request.resource.data.por == request.auth.uid
+          && request.resource.data.em == request.time;
+        allow update, delete: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
