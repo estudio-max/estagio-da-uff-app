@@ -70,6 +70,8 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 ## 4. Autenticação e autorização
 
 - **Divisão de Estágio:** papel `divisao` via *custom claim* do Firebase Auth, atribuído por Function administrativa. Só ela escreve (RN04).
+- **Usuários internos (D26, 28/10/2026):** login com Google; o servidor só aceita e-mail verificado terminado em `@id.uff.br`. O papel vem de um **grupo do Google** (Participante, Administrador, Proprietário). Uma Function consulta o grupo no login e grava a *custom claim* correspondente; as regras do Firestore só olham a claim. Hoje a claim é `divisao`; o nome final dos papéis sai da D26. Depende do plano Blaze e de a conta de serviço poder ler os membros do grupo. Enquanto isso, a demonstração segue com e-mail/senha e a claim `divisao`.
+- **Usuários externos (D27, pendente):** login e vínculo com a concedente ainda não decididos.
 - **Público:** sem login; acessa só a consulta pública, que devolve os campos públicos (RF03) e **nunca** o CPF (RN08).
 - **Opção B:** autorização em cada operação do Data Connect (`@auth(expr: "auth.token.divisao == true")`).
 - **Opção A:** Firestore Security Rules, com **testes de regras** no emulador (Fase 0).
