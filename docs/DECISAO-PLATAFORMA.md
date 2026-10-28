@@ -61,6 +61,6 @@ Se custo zero for indispensável, a **opção A** serve para o MVP de convênios
 ## O que precisamos do cliente
 
 1. Escolher entre A, B e C (D23).
-2. Confirmar se a página pública pode ser HTML, e não Flutter web (D24).
-3. Dizer qual burocracia se quer evitar: hospedagem ou aprovação (D25).
+2. ~~Confirmar se a página pública pode ser HTML~~ Decidida em 28/10/2026: HTML gerado (D24).
+4. ~~Indicar quem será o dono da conta Google Cloud/Firebase~~ Definido em 28/10/2026: Cosme (cosmefc@id.uff.br). **Ainda em aberto: quem paga** o plano Blaze, mesmo que hoje o custo seja zero.
 4. Indicar quem será o dono da conta Google Cloud/Firebase e quem paga, mesmo que hoje o custo seja zero.
