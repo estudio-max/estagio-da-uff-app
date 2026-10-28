@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Pipeline local: o mesmo que o CI roda. Só abra PR com tudo verde.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+echo "==> Formatação"
+dart format --output=none --set-exit-if-changed lib test
+
+echo "==> Análise estática"
+flutter analyze
+
+echo "==> Testes Flutter"
+flutter test
+
+echo "==> Testes de regras do Firestore (emulador)"
+npm ci --silent
+npm run test:rules
+
+echo "==> Testes das Functions"
+(cd functions && npm ci --silent && npm test)
+
+echo "Pipeline local verde."

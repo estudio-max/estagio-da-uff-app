@@ -1,10 +1,10 @@
 # STEPS — Sistema de Estágios UFF (app Flutter + Firebase)
 
-Estado em 07/10/2026: documentação inicial. **Próxima: decisões D23, D24 e D25 com o cliente; depois a Fase 0.**
+Estado em 28/10/2026: **Fase 0 quase fechada**. Falta só criar o projeto `prod`, que cabe ao Cosme, dono da conta e pagador (D25 decidida); passo a passo em `docs/CRIAR-PROD.md`. D24 decidida: página pública em HTML gerado. Projeto piloto para a PROGRAD; a STI é ignorada até a migração para a UFF. **Próximo: o Cosme criar o `prod`; depois a Fase 1.** A Fase 1 não começa antes de a Fase 0 fechar.
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
-| 0 | Fundação: ferramentas, projetos Firebase, emuladores, CI, protótipo | Pendente (aguarda D23) | Média |
+| 0 | Fundação: ferramentas, projetos Firebase, emuladores, CI, protótipo | Em andamento: `firebase.json`, `.firebaserc`, regras fechadas e emuladores (Auth, Firestore, Hosting) validados; projeto Flutter criado (android, ios, web; `flutter_lints`; analyze, format e teste de fumaça verdes) e testes de regras do Firestore (`npm run test:rules`); pipeline local `tools/ci` verde e GitHub Actions (`.github/workflows/ci.yml`, ainda não rodou no GitHub); Functions em TypeScript com teste; protótipo (login, lista e tela de convênio) funcionando no navegador contra os emuladores, com seed fictício. protótipo também validado num emulador Android (login, lista e tela de convênio). **Falta: `prod` (bloqueado por D25)** | Média |
 | 1 | MVP de convênios com paridade à versão Django | Pendente | Média |
 | 2 | Solicitação externa via gov.br | Pendente | Média |
 | 3 | TCE e ciclo do estágio | Fora do escopo atual | Alta |
@@ -20,7 +20,7 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
   - Emulator Suite (Auth, Data Connect/Firestore, Functions, Hosting);
   - pipeline local `tools/ci` e GitHub Actions (analyze, format, testes Flutter, testes das Functions, testes de regras/`@auth` no emulador);
   - um protótipo mínimo: login → lista de convênios → tela de convênio, contra o emulador.
-- **Pré-requisitos:** D23 (banco) decidido; conta Google Cloud com dono definido (D25).
+- **Pré-requisitos:** D23 (banco) decidido; conta Google Cloud com dono definido (D25: Cosme, cosmefc@id.uff.br, definido em 28/10/2026).
 - **Critério de conclusão:** pipeline local e CI verdes; o protótipo roda no navegador e num emulador Android.
 - **Riscos:** curva de aprendizado de Dart/Flutter; o Data Connect é um produto mais novo que o Firestore.
 

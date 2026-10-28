@@ -1,0 +1,14 @@
+{
+  "name": "estagios-uff-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:rules": "firebase emulators:exec --only firestore --project demo-estagios-uff \"node --test tests/*.test.mjs\"",
+    "seed": "node tools/seed.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.0",
+    "firebase-admin": "^13.10.0"
+  }
+}

@@ -26,3 +26,19 @@ Os comandos de instalação, emuladores e pipeline entram aqui na Fase 0.
 | Web (Chrome) | Pronto |
 | Android | Falta SDK 36 e Build Tools 28.0.3 (Android Studio → SDK Manager) |
 | Windows desktop | Fora do plano (exigiria completar o Visual Studio) |
+
+## Como rodar localmente (Fase 0)
+
+Tudo contra o Firebase Emulator Suite, com o projeto fictício `demo-estagios-uff`; nada toca a nuvem.
+
+```bash
+firebase emulators:start --project demo-estagios-uff   # terminal 1
+npm run seed                                           # terminal 2: dados e usuário fictícios
+flutter run -d chrome                                  # terminal 2: o app
+```
+
+O usuário fictício do seed está em `tools/seed.mjs`. Antes de abrir PR: `./tools/ci` (formatação, análise, testes Flutter, de regras e das Functions); o GitHub Actions roda o mesmo script.
+
+### Android
+
+No emulador Android o app usa `10.0.2.2` para chegar aos emuladores do Firebase; o manifesto de **debug** libera HTTP sem criptografia (`usesCleartextTraffic`), pois eles falam HTTP. O manifesto de release não tem essa permissão. Em máquinas com pouca memória, limite o Gradle em `~/.gradle/gradle.properties` (ex.: `org.gradle.jvmargs=-Xmx2G`), porque o padrão do projeto pede 8 GB.

@@ -70,7 +70,7 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 
 ## 5. Transversais
 
-- **Ambientes:** dois projetos Firebase, `estagios-uff-dev` e `estagios-uff-prod`. Desenvolvimento local no **Firebase Emulator Suite**, sem tocar na nuvem.
+- **Ambientes:** dois projetos Firebase, `dev` (`estagiosuff`) e `prod` (a criar). Desenvolvimento local no **Firebase Emulator Suite**, sem tocar na nuvem.
 - **Segredos:** nada no repositório. O `firebase_options.dart` de prod é gerado no CI; credenciais de SMTP ficam no Secret Manager.
 - **Testes:**
   - `flutter test`: unidade e widgets;
@@ -87,13 +87,14 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 |---|---|---|
 | B1 | Repositório novo; a versão Django é a referência funcional e de testes | Decidida em 07/10/2026 |
 | B2 | Flutter para o app da Divisão (Android, iOS, web) | Pedido do cliente |
-| B3 | Banco: Data Connect (PostgreSQL) recomendado; Firestore alternativo | **Pendente — D23** |
-| B4 | Página pública em HTML no Hosting, não em Flutter web | **Pendente — D24** |
+| B3 | Banco: Firestore (opção A). Data Connect fica como alternativa a reavaliar antes da Fase 3 | Decidida e confirmada pela PROGRAD em 27/10/2026 (D23) |
+| B7 | Projeto Firebase `dev` = `estagiosuff` (já existente, conta cosmefc@id.uff.br); desenvolvimento local no emulador com o projeto fictício `demo-estagios-uff`; `prod` ainda não criado | Proposta |
+| B4 | Página pública em HTML no Hosting, não em Flutter web | Decidida em 28/10/2026 (D24) |
 | B5 | Functions em TypeScript (melhor suporte no Firebase e nos emuladores) | Proposta |
 | B6 | Região `southamerica-east1` | Proposta |
 
 ## 7. Riscos e débitos
 
 - Duas bases de código (Django e Flutter) até a migração terminar: definir com o cliente qual delas a Divisão usa durante a transição.
-- O Identity Platform e o Cloud SQL são pagos; alguém precisa ser o dono da conta Google Cloud (D25).
+- O Identity Platform e o Cloud SQL são pagos; o dono da conta Google Cloud é o Cosme (cosmefc@id.uff.br), definido em 28/10/2026 (D25).
 - A equipe ainda não domina Dart/Flutter: a Fase 0 inclui um protótipo pequeno antes de portar regras.
