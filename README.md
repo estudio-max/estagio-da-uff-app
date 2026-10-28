@@ -32,7 +32,7 @@ Os comandos de instalação, emuladores e pipeline entram aqui na Fase 0.
 Tudo contra o Firebase Emulator Suite, com o projeto fictício `demo-estagios-uff`; nada toca a nuvem.
 
 ```bash
-firebase emulators:start --project demo-estagios-uff   # terminal 1
+firebase emulators:start --only auth,firestore --project demo-estagios-uff   # terminal 1
 npm run seed                                           # terminal 2: dados e usuário fictícios
 flutter run -d chrome                                  # terminal 2: o app
 ```
@@ -42,3 +42,5 @@ O seed cria `divisao@exemplo.test` (papel `divisao`, vê tudo) e `externo@exempl
 ### Android
 
 No emulador Android o app usa `10.0.2.2` para chegar aos emuladores do Firebase; o manifesto de **debug** libera HTTP sem criptografia (`usesCleartextTraffic`), pois eles falam HTTP. O manifesto de release não tem essa permissão. Em máquinas com pouca memória, limite o Gradle em `~/.gradle/gradle.properties` (ex.: `org.gradle.jvmargs=-Xmx2G`), porque o padrão do projeto pede 8 GB.
+
+Para publicar a demonstração na nuvem (projeto `dev`), ver `docs/DEMO-NUVEM.md`.
