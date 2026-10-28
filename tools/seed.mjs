@@ -4,9 +4,26 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
-process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST ??= '127.0.0.1:9099';
-if (!getApps().length) initializeApp({ projectId: 'demo-estagios-uff' });
+// Alvo: emulador (padrão) ou o projeto dev na nuvem (SEED_ALVO=nuvem, ver docs/DEMO-NUVEM.md).
+const nuvem = process.env.SEED_ALVO === 'nuvem';
+let senha = 'senha-de-teste';
+if (nuvem) {
+  const { FIREBASE_PROJECT_ID: projeto, SEED_SENHA, CONFIRMO_NUVEM } = process.env;
+  if (!projeto || CONFIRMO_NUVEM !== 'sim' || (SEED_SENHA ?? '').length < 12) {
+    console.error('Nuvem exige FIREBASE_PROJECT_ID, CONFIRMO_NUVEM=sim e SEED_SENHA com 12+ caracteres.');
+    process.exit(1);
+  }
+  if (projeto.startsWith('demo-') || /prod/i.test(projeto)) {
+    console.error('Recusado: o seed da nuvem é só para o projeto dev.');
+    process.exit(1);
+  }
+  senha = SEED_SENHA;
+  if (!getApps().length) initializeApp({ projectId: projeto });
+} else {
+  process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8080';
+  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= '127.0.0.1:9099';
+  if (!getApps().length) initializeApp({ projectId: 'demo-estagios-uff' });
+}
 
 const auth = getAuth();
 const db = getFirestore();
@@ -14,7 +31,7 @@ const db = getFirestore();
 // --- usuários: um da Divisão (claim) e um sem papel, para mostrar o bloqueio (RN04) ---
 async function usuario(uid, email, claims) {
   await auth.deleteUser(uid).catch(() => {});
-  await auth.createUser({ uid, email, password: 'senha-de-teste' });
+  await auth.createUser({ uid, email, password: senha });
   if (claims) await auth.setCustomUserClaims(uid, claims);
 }
 await usuario('divisao-dev', 'divisao@exemplo.test', { divisao: true });
@@ -73,10 +90,10 @@ for (const v of convenios) {
   const { id, c, ...dados } = v;
   const ref = db.collection('convenios').doc(id);
   await ref.set({ ...base, ...dados, concedente_id: c, concedente_nome: nome[c] });
-  await ref.collection('historico').doc().set({ por: 'divisao-dev', por_nome: 'divisao@exemplo.test', em: FieldValue.serverTimestamp(), acao: 'criado', campos: [] });
+  await ref.collection('historico').doc('criado').set({ por: 'divisao-dev', por_nome: 'divisao@exemplo.test', em: FieldValue.serverTimestamp(), acao: 'criado', campos: [] });
   const etapas = v.id === 'v4' ? etapasPadrao.slice(0, 2) : v.situacao === 'finalizado' ? etapasPadrao : [];
-  for (const [etapa, deslocamento] of etapas) {
-    await ref.collection('etapas').doc().set({ etapa, data: dia(deslocamento), observacao: '' });
+  for (const [i, [etapa, deslocamento]] of etapas.entries()) {
+    await ref.collection('etapas').doc('e' + i).set({ etapa, data: dia(deslocamento), observacao: '' });
   }
 }
 console.log('Seed fictício aplicado: 2 usuários, 6 concedentes, 7 convênios.');
