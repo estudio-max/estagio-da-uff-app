@@ -17,7 +17,7 @@ Quem executa: o Cosme (dono do projeto `estagiosuff`), com apoio de quem tem ace
 | Estar no grupo, com papel que dá acesso | Na Function, pela Directory API |
 | Só `divisao` lê e escreve os dados | Regras do Firestore |
 
-**Papéis do grupo.** No Google cada pessoa tem **um** papel no grupo (Proprietário, Gerente ou Membro), e Proprietário e Gerente já são membros. Por padrão os três dão acesso ao sistema (`PAPEIS_COM_ACESSO=OWNER,MANAGER,MEMBER`). Se o Proprietário deve ser só de recuperação, troque para `MANAGER,MEMBER`; mas isso tira o acesso de quem for Proprietário.
+**Papéis do grupo.** No Google cada pessoa tem **um** papel no grupo (Proprietário, Gerente ou Membro), e Proprietário e Gerente já são membros. Os três dão acesso ao sistema (`PAPEIS_COM_ACESSO=OWNER,MANAGER,MEMBER`), como decidido em 11/11/2026, inclusive o Proprietário. Para tirar o acesso de um papel, retire-o dessa lista.
 
 ## Passos
 
