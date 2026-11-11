@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,25 @@ const _opcoesNuvem = FirebaseOptions(
   authDomain: String.fromEnvironment('FIREBASE_AUTH_DOMAIN'),
 );
 
+/// D26: entra com o Google, restrito a `@id.uff.br` na tela. O servidor é que exige o domínio.
+Future<void> _entrarComGoogle() async {
+  final provedor = GoogleAuthProvider()
+    ..setCustomParameters({'hd': 'id.uff.br', 'prompt': 'select_account'});
+  if (kIsWeb) {
+    await FirebaseAuth.instance.signInWithPopup(provedor);
+  } else {
+    await FirebaseAuth.instance.signInWithProvider(provedor);
+  }
+}
+
+/// D26: confere o grupo do Google e grava a claim `divisao`. Só para quem entrou com Google.
+Future<void> _sincronizarPapel(User user) async {
+  if (!user.providerData.any((p) => p.providerId == 'google.com')) return;
+  await FirebaseFunctions.instanceFor(region: 'southamerica-east1')
+      .httpsCallable('sincronizarPapel')
+      .call<void>();
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -47,6 +67,9 @@ Future<void> main() async {
     App(
       auth: FirebaseAuth.instance,
       demo: _nuvem,
+      // O Google só existe na nuvem; o emulador não tem o grupo para consultar.
+      onGoogle: _nuvem ? _entrarComGoogle : null,
+      sincronizarPapel: _sincronizarPapel,
       repo: FirestoreRepositorio(
         FirebaseFirestore.instance,
         FirebaseAuth.instance,
@@ -60,6 +83,8 @@ class App extends StatelessWidget {
     required this.auth,
     required this.repo,
     this.demo = false,
+    this.onGoogle,
+    this.sincronizarPapel,
     super.key,
   });
 
@@ -68,6 +93,8 @@ class App extends StatelessWidget {
 
   /// Demonstração publicada: avisa que os dados são fictícios.
   final bool demo;
+  final Future<void> Function()? onGoogle;
+  final Future<void> Function(User user)? sincronizarPapel;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -109,10 +136,12 @@ class App extends StatelessWidget {
           return LoginPage(
             onEntrar: (email, senha) =>
                 auth.signInWithEmailAndPassword(email: email, password: senha),
+            onGoogle: onGoogle,
           );
         }
         return _ExigeDivisao(
           user: user,
+          sincronizar: sincronizarPapel,
           onSair: auth.signOut,
           child: Home(repo: repo, onSair: auth.signOut),
         );
@@ -122,45 +151,79 @@ class App extends StatelessWidget {
 }
 
 /// RN04: só o papel `divisao` entra; as regras do Firestore reforçam no servidor.
-class _ExigeDivisao extends StatelessWidget {
+class _ExigeDivisao extends StatefulWidget {
   const _ExigeDivisao({
     required this.user,
     required this.onSair,
     required this.child,
+    this.sincronizar,
   });
 
   final User user;
+  final Future<void> Function(User user)? sincronizar;
   final VoidCallback onSair;
   final Widget child;
 
   @override
+  State<_ExigeDivisao> createState() => _ExigeDivisaoState();
+}
+
+class _ExigeDivisaoState extends State<_ExigeDivisao> {
+  late Future<IdTokenResult> _token = _carregar();
+
+  // Sincroniza o papel (se houver) e só então lê a claim, já atualizada.
+  Future<IdTokenResult> _carregar() async {
+    await widget.sincronizar?.call(widget.user);
+    return widget.user.getIdTokenResult(true);
+  }
+
+  Widget _aviso(String texto, {VoidCallback? tentarDeNovo}) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Estágios UFF'),
+      actions: [
+        IconButton(
+          tooltip: 'Sair',
+          icon: const Icon(Icons.logout),
+          onPressed: widget.onSair,
+        ),
+      ],
+    ),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(texto, textAlign: TextAlign.center),
+            if (tentarDeNovo != null) ...[
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: tentarDeNovo,
+                child: const Text('Tentar de novo'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
+
+  @override
   Widget build(BuildContext context) => FutureBuilder<IdTokenResult>(
-    future: user.getIdTokenResult(true),
+    future: _token,
     builder: (context, snap) {
+      if (snap.hasError) {
+        return _aviso(
+          'Não foi possível confirmar seu acesso agora.',
+          tentarDeNovo: () => setState(() => _token = _carregar()),
+        );
+      }
       if (!snap.hasData) {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
-      if (snap.data!.claims?['divisao'] == true) return child;
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Estágios UFF'),
-          actions: [
-            IconButton(
-              tooltip: 'Sair',
-              icon: const Icon(Icons.logout),
-              onPressed: onSair,
-            ),
-          ],
-        ),
-        body: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              'Este usuário não pertence à Divisão de Estágio e não tem acesso.',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
+      if (snap.data!.claims?['divisao'] == true) return widget.child;
+      return _aviso(
+        'Este usuário não pertence à Divisão de Estágio e não tem acesso.',
       );
     },
   );
