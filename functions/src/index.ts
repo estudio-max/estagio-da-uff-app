@@ -3,10 +3,11 @@ import { getAuth } from 'firebase-admin/auth';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
-import { defineString } from 'firebase-functions/params';
 import { GoogleAuth } from 'google-auth-library';
 import { criarDiretorio } from './diretorio.js';
-import { decidirPapel, type PapelNoGrupo } from './papel.js';
+import { criarDiretorioApi } from './diretorioApi.js';
+import { criarDiretorioLista } from './diretorioLista.js';
+import { decidirPapel, type DiretorioGrupos, type PapelNoGrupo } from './papel.js';
 import { saudacao } from './saudacao.js';
 
 setGlobalOptions({ region: 'southamerica-east1' });
@@ -18,13 +19,54 @@ export const ola = onRequest((req, res) => {
 });
 
 // D26: valores (não secretos) vêm de functions/.env.<projeto>; ver docs/CONFIGURAR-GRUPO.md.
-const grupoEmail = defineString('GRUPO_EMAIL');
-const dominioPermitido = defineString('DOMINIO_PERMITIDO', { default: 'id.uff.br' });
-const diretorioSa = defineString('DIRECTORY_SA');
-const diretorioSubject = defineString('DIRECTORY_SUBJECT');
-const papeisComAcesso = defineString('PAPEIS_COM_ACESSO', { default: 'OWNER,MANAGER,MEMBER' });
+/** Variável de ambiente (vem de functions/.env.<projeto>), com valor padrão. */
+const env = (nome: string, padrao = ''): string => (process.env[nome] ?? padrao).trim();
+
+const grupoEmail = (): string => env('GRUPO_EMAIL');
+const dominioPermitido = (): string => env('DOMINIO_PERMITIDO', 'id.uff.br');
+const papeisComAcesso = (): string => env('PAPEIS_COM_ACESSO', 'OWNER,MANAGER,MEMBER');
+// Ponte provisória: lista de e-mails autorizados (ex.: ana@id.uff.br, bia@id.uff.br:MANAGER).
+// Se preenchida, vale no lugar do grupo; esvazie para voltar à API ou à Directory API.
+const emailsAutorizados = (): string => env('EMAILS_AUTORIZADOS');
+// Caminho provisório: API do grupo no Cloud Run (docs/API-GRUPO.md). Se vazio, usa a Directory API.
+const diretorioApiUrl = (): string => env('DIRECTORY_API_URL');
+// Caminho direto pela Directory API (delegação em todo o domínio).
+const diretorioSa = (): string => env('DIRECTORY_SA');
+const diretorioSubject = (): string => env('DIRECTORY_SUBJECT');
 
 const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
+
+function diretorioConfigurado(): DiretorioGrupos {
+  // Precedência: lista de e-mails, depois a API do grupo, depois a Directory API.
+  if (emailsAutorizados().trim()) return criarDiretorioLista(emailsAutorizados());
+  const urlApi = diretorioApiUrl().trim();
+  if (urlApi) {
+    return criarDiretorioApi({
+      urlMembros: urlApi.replace(/\/+$/, ''),
+      // Identidade da própria Function (ID token do Google); nenhuma chave é guardada.
+      obterAutorizacao: async (audiencia) => {
+        const cliente = await auth.getIdTokenClient(audiencia);
+        const autorizacao = (await cliente.getRequestHeaders()).get('Authorization');
+        if (!autorizacao) throw new Error('sem token de identidade da Function');
+        return autorizacao;
+      },
+    });
+  }
+  if (!diretorioSa() || !diretorioSubject()) {
+    throw new Error(
+      'configure EMAILS_AUTORIZADOS, DIRECTORY_API_URL ou DIRECTORY_SA e DIRECTORY_SUBJECT',
+    );
+  }
+  return criarDiretorio({
+    saAlvo: diretorioSa(),
+    subject: diretorioSubject(),
+    obterTokenIam: async () => {
+      const t = await auth.getAccessToken();
+      if (!t) throw new Error('sem token da conta da Function');
+      return t;
+    },
+  });
+}
 
 /**
  * Chamada pelo app logo depois do login com Google: confere o grupo e grava a claim `divisao`.
@@ -39,18 +81,10 @@ export const sincronizarPapel = onCall(async (req) => {
     decisao = await decidirPapel({
       email: token.email,
       emailVerificado: token.email_verified,
-      dominio: dominioPermitido.value(),
-      grupo: grupoEmail.value(),
-      papeisComAcesso: papeisComAcesso.value().split(',').map((p) => p.trim()) as PapelNoGrupo[],
-      diretorio: criarDiretorio({
-        saAlvo: diretorioSa.value(),
-        subject: diretorioSubject.value(),
-        obterTokenIam: async () => {
-          const t = await auth.getAccessToken();
-          if (!t) throw new Error('sem token da conta da Function');
-          return t;
-        },
-      }),
+      dominio: dominioPermitido(),
+      grupo: grupoEmail(),
+      papeisComAcesso: papeisComAcesso().split(',').map((p) => p.trim()) as PapelNoGrupo[],
+      diretorio: diretorioConfigurado(),
     });
   } catch (e) {
     logger.error('consulta ao grupo falhou', { uid, erro: (e as Error).message });
