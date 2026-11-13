@@ -18,3 +18,7 @@ node_modules/
 .idea/
 *.iml
 functions/lib/
+
+# Valores do ambiente das Functions (e-mail do grupo, conta de serviço): só o .env.example vai ao repositório
+functions/.env*
+!functions/.env.example

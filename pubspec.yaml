@@ -39,6 +39,7 @@ dependencies:
   cloud_firestore: ^7.1.0
   flutter_localizations:
     sdk: flutter
+  cloud_functions: ^7.0.1
 
 dev_dependencies:
   flutter_test:
