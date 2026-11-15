@@ -19,4 +19,7 @@ npm run test:rules
 echo "==> Testes das Functions"
 (cd functions && npm ci --silent && npm test)
 
+echo "==> Testes das Functions contra o emulador"
+(cd functions && npm run test:emulador)
+
 echo "Pipeline local verde."

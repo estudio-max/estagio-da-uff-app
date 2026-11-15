@@ -67,6 +67,14 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 - **Dívida conhecida:** a unicidade de `numero` e de `documento` é checada no app antes de gravar, sem transação; duas pessoas gravando o mesmo número ao mesmo tempo poderiam duplicar. Garantia total: coleção-índice (ver acima), a fazer se virar problema.
 - **Dívida conhecida:** `concedente_nome` é atualizado pelo app ao editar a concedente; a Function de sincronia fica para depois.
 
+**Como a 1b ficou implementada (importação do Drupal, RF07):**
+- **Onde:** `functions/src/importacao.ts` (leitura do XML e regras, sem Firestore), `importacaoFirestore.ts` (lê o estado e grava) e a Function chamável `importarConveniosDrupal` (`{ xml, simular }`, só com a claim `divisao`, devolve as contagens e o CSV). Para desenvolvimento, `importarCli.js` faz o mesmo e só aceita o emulador.
+- **Porta do Django** (`convenios/importacao.py`), com os mesmos casos de teste: ano de 2 dígitos é 20aa; rejeita sem número, sem datas, término não posterior ao início, documento com dígito inválido e número já usado por outro convênio (do Drupal ou do app); avisa tipo sem correspondência (D11, vira "Outros"), UF inválida (fica em branco), vigência acima de 5 anos e concedente sem CNPJ (D20, agrupada pelo nome sem diferenciar caixa). O convênio entra como finalizado, com `finalizado_em` nulo (D19).
+- **Idempotência:** o convênio importado tem id `drupal-<nó>` e o campo `id_drupal`; a concedente é achada pelo `documento` ou, sem ele, pelo nome. Reimportar o mesmo arquivo não grava nada; o que mudou é mesclado, preservando o que só existe no app (minuta, origem, nome fantasia, etapas).
+- **Lotes:** o estado inteiro é lido uma vez e o plano é calculado em memória; as escritas de cada registro vão no mesmo lote (até 450 operações), então um registro entra inteiro ou não entra. Se um lote falhar, rodar de novo completa.
+- **Histórico (RF08):** `importado` ao criar e `reimportado` (com os campos) ao atualizar, com o autor da chamada. Concedente renomeada pela importação atualiza a cópia do nome nos convênios dela.
+- **Diferenças em relação ao Django:** data fora do formato `dd/mm/aa` é rejeitada com o motivo (lá derrubava a importação); registro rejeitado não deixa aviso no relatório. HTML cru dentro de um campo vira texto (lá se perdia).
+
 ## 4. Autenticação e autorização
 
 - **Divisão de Estágio:** papel `divisao` via *custom claim* do Firebase Auth, atribuído por Function administrativa. Só ela escreve (RN04).

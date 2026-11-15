@@ -44,7 +44,9 @@
       "codebase": "default",
       "ignore": [
         "node_modules",
-        "lib/*.test.js"
+        "lib/*.test.js",
+        "lib/*.emulador.js",
+        "lib/importarCli.js"
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"

@@ -18,6 +18,10 @@ class RepositorioEmMemoria implements Repositorio {
   final _mudou = StreamController<void>.broadcast();
   var _seq = 0;
 
+  /// Registro gravado fora do app (ex.: pela importação do Drupal).
+  void registrarHistorico(String convenioId, RegistroHistorico r) =>
+      (_historico[convenioId] ??= []).insert(0, r);
+
   Stream<T> _observa<T>(T Function() ler) async* {
     yield ler();
     await for (final _ in _mudou.stream) {

@@ -1,6 +1,7 @@
 import 'package:estagios_uff/auth/login_page.dart';
 import 'package:estagios_uff/dominio/modelos.dart';
 import 'package:estagios_uff/telas/concedentes.dart';
+import 'package:estagios_uff/telas/convenio_detalhe.dart';
 import 'package:estagios_uff/telas/convenios.dart';
 import 'package:estagios_uff/telas/convenio_form.dart';
 import 'package:material_ui/material_ui.dart';
@@ -221,6 +222,44 @@ void main() {
       final historico = await repo.historico(salvo.id!).first;
       expect(historico.single.acao, 'criado');
     });
+  });
+
+  testWidgets('histórico mostra a importação do Drupal (RF07, RF08)', (
+    tester,
+  ) async {
+    final repo =
+        RepositorioEmMemoria(
+            concedentes: [empresa],
+            convenios: [
+              convenio('drupal-1', 'PR-1/2026', DateTime(2026), DateTime(2030)),
+            ],
+          )
+          ..registrarHistorico(
+            'drupal-1',
+            RegistroHistorico(por: 'ana', em: hoje, acao: 'importado'),
+          )
+          ..registrarHistorico(
+            'drupal-1',
+            RegistroHistorico(
+              por: 'ana',
+              em: hoje,
+              acao: 'reimportado',
+              campos: const ['fim_vigencia'],
+            ),
+          );
+    await abrir(
+      tester,
+      ConvenioDetalhe(repo: repo, id: 'drupal-1', agora: () => hoje),
+    );
+    await tester.scrollUntilVisible(
+      find.textContaining('importou do estagio.uff.br'),
+      200,
+    );
+    expect(find.textContaining('importou do estagio.uff.br'), findsOneWidget);
+    expect(
+      find.textContaining('pela importação do Drupal: fim da vigência'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('login com falha mostra erro', (tester) async {
