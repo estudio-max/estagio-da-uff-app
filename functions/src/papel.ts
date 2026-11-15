@@ -2,6 +2,23 @@
 
 export type PapelNoGrupo = 'OWNER' | 'MANAGER' | 'MEMBER';
 
+const PAPEIS: readonly string[] = ['OWNER', 'MANAGER', 'MEMBER'];
+
+/**
+ * Lê `PAPEIS_COM_ACESSO` (ex.: `owner, Manager,MEMBER`): ignora caixa e espaços.
+ * Papel desconhecido é erro, para um erro de digitação não tirar o acesso de ninguém em silêncio.
+ */
+export function lerPapeisComAcesso(texto: string): PapelNoGrupo[] {
+  const papeis = texto
+    .split(',')
+    .map((p) => p.trim().toUpperCase())
+    .filter((p) => p !== '');
+  for (const p of papeis) {
+    if (!PAPEIS.includes(p)) throw new Error(`papel inválido em PAPEIS_COM_ACESSO: ${p}`);
+  }
+  return papeis as PapelNoGrupo[];
+}
+
 export interface DiretorioGrupos {
   /** Papel direto da pessoa no grupo, ou null se não for membro. */
   papelNoGrupo(grupo: string, email: string): Promise<PapelNoGrupo | null>;

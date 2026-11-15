@@ -7,7 +7,7 @@ import { GoogleAuth } from 'google-auth-library';
 import { criarDiretorio } from './diretorio.js';
 import { criarDiretorioApi } from './diretorioApi.js';
 import { criarDiretorioLista } from './diretorioLista.js';
-import { decidirPapel, type DiretorioGrupos, type PapelNoGrupo } from './papel.js';
+import { decidirPapel, lerPapeisComAcesso, type DiretorioGrupos } from './papel.js';
 import { saudacao } from './saudacao.js';
 
 setGlobalOptions({ region: 'southamerica-east1' });
@@ -83,7 +83,7 @@ export const sincronizarPapel = onCall(async (req) => {
       emailVerificado: token.email_verified,
       dominio: dominioPermitido(),
       grupo: grupoEmail(),
-      papeisComAcesso: papeisComAcesso().split(',').map((p) => p.trim()) as PapelNoGrupo[],
+      papeisComAcesso: lerPapeisComAcesso(papeisComAcesso()),
       diretorio: diretorioConfigurado(),
     });
   } catch (e) {

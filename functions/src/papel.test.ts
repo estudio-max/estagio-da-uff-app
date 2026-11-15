@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { decidirPapel, type DiretorioGrupos, type PapelNoGrupo } from './papel.js';
+import { decidirPapel, lerPapeisComAcesso, type DiretorioGrupos, type PapelNoGrupo } from './papel.js';
 
 const diretorio = (papeis: Record<string, PapelNoGrupo>): DiretorioGrupos => ({
   papelNoGrupo: async (_grupo, email) => papeis[email] ?? null,
@@ -93,4 +93,13 @@ test('falha do diretório propaga (a Function não concede nada)', async () => {
     decidirPapel({ ...base, diretorio: quebrado, email: 'ana@id.uff.br', emailVerificado: true }),
     /503/,
   );
+});
+
+test('PAPEIS_COM_ACESSO ignora caixa e espaços', () => {
+  assert.deepEqual(lerPapeisComAcesso(' owner, Manager ,MEMBER '), ['OWNER', 'MANAGER', 'MEMBER']);
+  assert.deepEqual(lerPapeisComAcesso('member,'), ['MEMBER']);
+});
+
+test('PAPEIS_COM_ACESSO com papel desconhecido é erro', () => {
+  assert.throws(() => lerPapeisComAcesso('OWNER,MEMBRO'), /papel inválido em PAPEIS_COM_ACESSO: MEMBRO/);
 });
