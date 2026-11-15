@@ -67,3 +67,16 @@ export async function decidirPapel(e: EntradaPapel): Promise<DecisaoPapel> {
   if (!e.papeisComAcesso.includes(papel)) return nega('papel_sem_acesso', papel);
   return { divisao: true, papel, motivo: 'ok' };
 }
+
+/**
+ * Claims a gravar para que a `divisao` fique igual a `divisao`, sem perder as demais
+ * (ex.: `concedente_id`, prevista na D27). Devolve `null` se nada precisa mudar.
+ */
+export function claimsComDivisao(
+  atuais: Record<string, unknown> | undefined,
+  divisao: boolean,
+): Record<string, unknown> | null {
+  if ((atuais?.divisao === true) === divisao) return null;
+  const { divisao: _anterior, ...demais } = atuais ?? {};
+  return divisao ? { ...demais, divisao: true } : demais;
+}

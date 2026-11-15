@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { decidirPapel, lerPapeisComAcesso, type DiretorioGrupos, type PapelNoGrupo } from './papel.js';
+import { claimsComDivisao, decidirPapel, lerPapeisComAcesso, type DiretorioGrupos, type PapelNoGrupo } from './papel.js';
 
 const diretorio = (papeis: Record<string, PapelNoGrupo>): DiretorioGrupos => ({
   papelNoGrupo: async (_grupo, email) => papeis[email] ?? null,
@@ -102,4 +102,25 @@ test('PAPEIS_COM_ACESSO ignora caixa e espaços', () => {
 
 test('PAPEIS_COM_ACESSO com papel desconhecido é erro', () => {
   assert.throws(() => lerPapeisComAcesso('OWNER,MEMBRO'), /papel inválido em PAPEIS_COM_ACESSO: MEMBRO/);
+});
+
+test('claims: concede divisao a quem não tinha nenhuma', () => {
+  assert.deepEqual(claimsComDivisao(undefined, true), { divisao: true });
+});
+
+test('claims: nada muda quando a divisao já está certa', () => {
+  assert.equal(claimsComDivisao({ divisao: true }, true), null);
+  assert.equal(claimsComDivisao(undefined, false), null);
+  assert.equal(claimsComDivisao({ concedente_id: 'c1' }, false), null);
+});
+
+test('claims: conceder e revogar preservam as outras claims', () => {
+  assert.deepEqual(claimsComDivisao({ concedente_id: 'c1' }, true), { concedente_id: 'c1', divisao: true });
+  assert.deepEqual(claimsComDivisao({ divisao: true, concedente_id: 'c1' }, false), { concedente_id: 'c1' });
+});
+
+test('claims: revogar remove a chave, não grava divisao: false', () => {
+  const novas = claimsComDivisao({ divisao: true }, false);
+  assert.deepEqual(novas, {});
+  assert.equal(Object.hasOwn(novas ?? {}, 'divisao'), false);
 });

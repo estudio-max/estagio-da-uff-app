@@ -7,7 +7,7 @@ import { GoogleAuth } from 'google-auth-library';
 import { criarDiretorio } from './diretorio.js';
 import { criarDiretorioApi } from './diretorioApi.js';
 import { criarDiretorioLista } from './diretorioLista.js';
-import { decidirPapel, lerPapeisComAcesso, type DiretorioGrupos } from './papel.js';
+import { claimsComDivisao, decidirPapel, lerPapeisComAcesso, type DiretorioGrupos } from './papel.js';
 import { saudacao } from './saudacao.js';
 
 setGlobalOptions({ region: 'southamerica-east1' });
@@ -91,9 +91,10 @@ export const sincronizarPapel = onCall(async (req) => {
     throw new HttpsError('unavailable', 'Não foi possível consultar o grupo agora. Tente de novo.');
   }
 
-  if ((token.divisao === true) !== decisao.divisao) {
-    await getAuth().setCustomUserClaims(uid, decisao.divisao ? { divisao: true } : {});
-  }
+  // Lê as claims gravadas (o token pode estar até 1 hora atrasado) e só mexe na `divisao`.
+  const { customClaims } = await getAuth().getUser(uid);
+  const novas = claimsComDivisao(customClaims, decisao.divisao);
+  if (novas !== null) await getAuth().setCustomUserClaims(uid, novas);
   logger.info('papel sincronizado', { uid, motivo: decisao.motivo, papel: decisao.papel });
   return { divisao: decisao.divisao, motivo: decisao.motivo };
 });
