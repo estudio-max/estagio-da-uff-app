@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -7,8 +8,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'auth/login_page.dart';
 import 'dados/firestore_repositorio.dart';
+import 'dados/importacao.dart';
 import 'dados/repositorio.dart';
 import 'telas/home.dart';
+import 'telas/importacao.dart';
 
 // Projeto fictício do Emulator Suite: nada aponta para a nuvem.
 const _opcoesEmulador = FirebaseOptions(
@@ -41,12 +44,27 @@ Future<void> _entrarComGoogle() async {
   }
 }
 
+FirebaseFunctions get _functions =>
+    FirebaseFunctions.instanceFor(region: 'southamerica-east1');
+
+/// RF07: a Divisão escolhe o XML exportado do Drupal.
+Future<ArquivoXml?> _escolherXml() async {
+  final arquivos = await FilePicker.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['xml'],
+  );
+  if (arquivos.isEmpty) return null;
+  final f = arquivos.single;
+  return ArquivoXml(f.name, await f.readAsBytes());
+}
+
+Future<void> _salvarRelatorio(String nome, Uint8List bytes) =>
+    FilePicker.saveFile(fileName: nome, bytes: bytes, mimeType: 'text/csv');
+
 /// D26: confere o grupo do Google e grava a claim `divisao`. Só para quem entrou com Google.
 Future<void> _sincronizarPapel(User user) async {
   if (!user.providerData.any((p) => p.providerId == 'google.com')) return;
-  await FirebaseFunctions.instanceFor(region: 'southamerica-east1')
-      .httpsCallable('sincronizarPapel')
-      .call<void>();
+  await _functions.httpsCallable('sincronizarPapel').call<void>();
 }
 
 Future<void> main() async {
@@ -61,6 +79,7 @@ Future<void> main() async {
         : '127.0.0.1';
     await FirebaseAuth.instance.useAuthEmulator(host, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+    _functions.useFunctionsEmulator(host, 5001);
   }
   runApp(
     App(
@@ -69,6 +88,11 @@ Future<void> main() async {
       // O Google só existe na nuvem; o emulador não tem o grupo para consultar.
       onGoogle: _nuvem ? _entrarComGoogle : null,
       sincronizarPapel: _sincronizarPapel,
+      telaImportacao: (_) => ImportacaoPage(
+        importador: FunctionsImportador(_functions),
+        escolherArquivo: _escolherXml,
+        salvarRelatorio: _salvarRelatorio,
+      ),
       repo: FirestoreRepositorio(
         FirebaseFirestore.instance,
         FirebaseAuth.instance,
@@ -84,6 +108,7 @@ class App extends StatelessWidget {
     this.demo = false,
     this.onGoogle,
     this.sincronizarPapel,
+    this.telaImportacao,
     super.key,
   });
 
@@ -94,6 +119,7 @@ class App extends StatelessWidget {
   final bool demo;
   final Future<void> Function()? onGoogle;
   final Future<void> Function(User user)? sincronizarPapel;
+  final WidgetBuilder? telaImportacao;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -142,7 +168,11 @@ class App extends StatelessWidget {
           user: user,
           sincronizar: sincronizarPapel,
           onSair: auth.signOut,
-          child: Home(repo: repo, onSair: auth.signOut),
+          child: Home(
+            repo: repo,
+            onSair: auth.signOut,
+            telaImportacao: telaImportacao,
+          ),
         );
       },
     ),

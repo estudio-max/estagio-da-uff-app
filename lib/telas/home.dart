@@ -5,10 +5,18 @@ import 'concedentes.dart';
 import 'convenios.dart';
 
 class Home extends StatefulWidget {
-  const Home({required this.repo, required this.onSair, super.key});
+  const Home({
+    required this.repo,
+    required this.onSair,
+    this.telaImportacao,
+    super.key,
+  });
 
   final Repositorio repo;
   final VoidCallback onSair;
+
+  /// RF07: tela de importação do Drupal; sem ela, o botão não aparece.
+  final WidgetBuilder? telaImportacao;
 
   @override
   State<Home> createState() => _HomeState();
@@ -22,6 +30,14 @@ class _HomeState extends State<Home> {
     appBar: AppBar(
       title: const Text('Estágios UFF · Divisão de Estágio'),
       actions: [
+        if (widget.telaImportacao case final tela?)
+          IconButton(
+            tooltip: 'Importar do estagio.uff.br',
+            icon: const Icon(Icons.upload_file),
+            onPressed: () =>
+                Navigator.of(context)
+                    .push(MaterialPageRoute<void>(builder: tela)),
+          ),
         IconButton(
           tooltip: 'Sair',
           icon: const Icon(Icons.logout),
