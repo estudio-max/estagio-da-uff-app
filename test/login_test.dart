@@ -1,5 +1,5 @@
 import 'package:estagios_uff/auth/login_page.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<void> abrir(WidgetTester tester, LoginPage tela) async {

@@ -3,7 +3,7 @@ import 'package:estagios_uff/dominio/modelos.dart';
 import 'package:estagios_uff/telas/concedentes.dart';
 import 'package:estagios_uff/telas/convenios.dart';
 import 'package:estagios_uff/telas/convenio_form.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'repositorio_em_memoria.dart';
