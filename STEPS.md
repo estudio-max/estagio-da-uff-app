@@ -5,7 +5,7 @@ Estado em 15/11/2026: **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
 | 0 | Fundação: ferramentas, projetos Firebase, emuladores, CI, protótipo | Em andamento: `firebase.json`, `.firebaserc`, regras fechadas e emuladores (Auth, Firestore, Hosting) validados; projeto Flutter criado (android, ios, web; `flutter_lints`; analyze, format e teste de fumaça verdes) e testes de regras do Firestore (`npm run test:rules`); pipeline local `tools/ci` verde e GitHub Actions (`.github/workflows/ci.yml`, ainda não rodou no GitHub); Functions em TypeScript com teste; protótipo (login, lista e tela de convênio) funcionando no navegador contra os emuladores, com seed fictício. protótipo também validado num emulador Android (login, lista e tela de convênio). **Falta: `prod` (bloqueado por D25)** | Média |
-| 1 | MVP de convênios com paridade à versão Django | Em andamento: **1a** feita no app (domínio, regras do Firestore, telas e histórico, com os casos de teste portados); falta homologar. **1b** feita (Function de importação com os casos de teste portados); falta rodar com o XML real. 1c a 1e pendentes | Média |
+| 1 | MVP de convênios com paridade à versão Django | Em andamento: **1a** feita no app (domínio, regras do Firestore, telas e histórico, com os casos de teste portados); falta homologar. **1b** feita (Function de importação com os casos de teste portados e tela de envio no app); falta rodar com o XML real. 1c a 1e pendentes | Média |
 | 2 | Solicitação externa via gov.br | Pendente | Média |
 | 3 | TCE e ciclo do estágio | Fora do escopo atual | Alta |
 
@@ -29,7 +29,7 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
 
 ### Próximos incrementos
 
-Pelo desenho atual: **1c** página pública (HTML gerado, D24) e acesso externo conforme a D27, **1d** alertas de vencimento, **1e** painel. Antes de 1c a 1e, a PROGRAD precisa responder D2, D3, D4, D21 e D22. A 1b ainda precisa de um jeito de a Divisão enviar o XML pelo app (hoje a Function é chamável, mas o app não tem a tela) e de rodar com o XML real no `dev`.
+Pelo desenho atual: **1c** página pública (HTML gerado, D24) e acesso externo conforme a D27, **1d** alertas de vencimento, **1e** painel. Antes de 1c a 1e, a PROGRAD precisa responder D2, D3, D4, D21 e D22. A 1b ainda precisa rodar com o XML real no `dev` (exige o plano Blaze, para as Functions).
 
 ## Fase 0 — Fundação
 
@@ -49,7 +49,7 @@ Pelo desenho atual: **1c** página pública (HTML gerado, D24) e acesso externo 
 Mesmos incrementos da versão Django, cada um com os **mesmos casos de teste** portados:
 
 1. **1a** — Concedente, convênio e etapas; cadastro no app; histórico de alterações (RF01, RF02, RF08).
-2. **1b** — Importação do XML do Drupal por Function (RF07); idempotente pelo `id_drupal`, relatório de rejeitados e avisos. *Feita (Function e testes); falta a tela de envio no app e rodar com o XML real.*
+2. **1b** — Importação do XML do Drupal por Function (RF07); idempotente pelo `id_drupal`, relatório de rejeitados e avisos. *Feita (Function, tela de envio no app e testes); falta rodar com o XML real.*
 3. **1c** — Página pública em HTML com busca e selo "a partir de" (RF03, RF04, RN01, RN08, MS06, MS07).
 4. **1d** — Alertas de vencimento: Function agendada diária (RF05, MS01 parcial).
 5. **1e** — Painel com indicadores e gráficos no app (RF06, MS05 parcial).

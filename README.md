@@ -32,7 +32,8 @@ Os comandos de instalação, emuladores e pipeline entram aqui na Fase 0.
 Tudo contra o Firebase Emulator Suite, com o projeto fictício `demo-estagios-uff`; nada toca a nuvem.
 
 ```bash
-firebase emulators:start --only auth,firestore --project demo-estagios-uff   # terminal 1
+(cd functions && npm run build)                        # as Functions rodam do JS compilado
+firebase emulators:start --only auth,firestore,functions --project demo-estagios-uff   # terminal 1
 npm run seed                                           # terminal 2: dados e usuário fictícios
 flutter run -d chrome                                  # terminal 2: o app
 ```
@@ -49,7 +50,9 @@ FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node functions/lib/importarCli.js conveni
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node functions/lib/importarCli.js conveniosestagio.xml
 ```
 
-O relatório de rejeitados e avisos sai em `reports/importacao.csv` (separado por `;`, abre no Excel). Na nuvem, a importação é feita pela Function `importarConveniosDrupal`, só com o papel `divisao`.
+O relatório de rejeitados e avisos sai em `reports/importacao.csv` (separado por `;`, abre no Excel).
+
+Pelo app, a Divisão usa o botão **Importar do estagio.uff.br** na barra do topo: escolhe o XML, simula (nada é gravado), confere as contagens, salva o relatório se quiser e só então importa, com confirmação. O app chama a Function `importarConveniosDrupal`, que só aceita o papel `divisao`; localmente, ela roda no emulador de Functions.
 
 ### Android
 

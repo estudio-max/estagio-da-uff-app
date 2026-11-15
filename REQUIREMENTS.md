@@ -41,7 +41,7 @@ Diretriz da reunião: **separar o "o quê" do "como"**. O "o quê" do processo a
 | RF04 | Página pública com convênios vigentes, com busca por nome/CNPJ/tipo. Convênio entra na página automaticamente ao ser finalizado. | Pendente — referência pronta no Django (1c) |
 | RF05 | Alertas de vencimento para a Divisão (e-mail e painel), com antecedências configuráveis. | Pendente — referência pronta no Django (1d) |
 | RF06 | Painéis estratégicos: vigentes, encerrados/vencidos, vencendo em 30/90/180 dias, em tramitação, por tipo de concedente. Visibilidade (pública/privada) definida pela PROGRAD. | Pendente — referência pronta no Django (1e) |
-| RF07 | Importar os dados atuais das planilhas (públicos e privados) e da página do site. | Implementado (1b): Function `importarConveniosDrupal` (só `divisao`), idempotente pelo nó do Drupal, com simulação e relatório CSV; casos de teste do Django portados. Falta rodar com o XML real |
+| RF07 | Importar os dados atuais das planilhas (públicos e privados) e da página do site. | Implementado (1b): Function `importarConveniosDrupal` (só `divisao`), idempotente pelo nó do Drupal, com simulação e relatório CSV; casos de teste do Django portados. Tela de envio no app (simula antes de gravar). Falta rodar com o XML real |
 | RF08 | Histórico de alterações de cada convênio (quem, quando, o quê). | Implementado no app (1a): quem, quando e quais campos (D17, opção a, sem valor anterior) |
 ### Média prioridade — Fase 2 (entrada externa)
 
