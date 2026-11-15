@@ -1,5 +1,6 @@
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
@@ -7,6 +8,7 @@ import { GoogleAuth } from 'google-auth-library';
 import { criarDiretorio } from './diretorio.js';
 import { criarDiretorioApi } from './diretorioApi.js';
 import { criarDiretorioLista } from './diretorioLista.js';
+import { importarXml } from './importacaoFirestore.js';
 import { claimsComDivisao, decidirPapel, lerPapeisComAcesso, type DiretorioGrupos } from './papel.js';
 import { saudacao } from './saudacao.js';
 
@@ -98,3 +100,33 @@ export const sincronizarPapel = onCall(async (req) => {
   logger.info('papel sincronizado', { uid, motivo: decisao.motivo, papel: decisao.papel });
   return { divisao: decisao.divisao, motivo: decisao.motivo };
 });
+
+/**
+ * RF07: importa o XML exportado do estagio.uff.br (Drupal). Só a Divisão (RN04).
+ * Recebe `{ xml, simular }`; com `simular`, nada é gravado. Devolve as contagens e o
+ * relatório CSV de rejeitados e avisos. Pode rodar de novo: a chave é o nó do Drupal.
+ */
+export const importarConveniosDrupal = onCall(
+  { timeoutSeconds: 540, memory: '1GiB' },
+  async (req) => {
+    if (req.auth?.token.divisao !== true) {
+      throw new HttpsError('permission-denied', 'Só a Divisão de Estágio importa convênios.');
+    }
+    const { xml, simular } = (req.data ?? {}) as { xml?: unknown; simular?: unknown };
+    if (typeof xml !== 'string' || !xml.trim()) {
+      throw new HttpsError('invalid-argument', 'Envie o conteúdo do XML exportado do Drupal.');
+    }
+    const autor = { uid: req.auth.uid, email: (req.auth.token.email as string | undefined) ?? null };
+    let resultado;
+    try {
+      resultado = await importarXml(getFirestore(), xml, autor, simular === true);
+    } catch (e) {
+      logger.error('importação falhou', { uid: autor.uid, erro: (e as Error).message });
+      throw new HttpsError('internal', 'A importação falhou. Rodar de novo completa o que faltou.');
+    }
+    // Só contagens no log: o relatório tem nomes e CNPJs das concedentes.
+    const { csv: _csv, ...contagens } = resultado;
+    logger.info('importação do Drupal', { uid: autor.uid, ...contagens });
+    return resultado;
+  },
+);

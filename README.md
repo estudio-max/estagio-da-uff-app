@@ -37,7 +37,19 @@ npm run seed                                           # terminal 2: dados e usu
 flutter run -d chrome                                  # terminal 2: o app
 ```
 
-O seed cria `divisao@exemplo.test` (papel `divisao`, vê tudo) e `externo@exemplo.test` (sem papel, é barrado), ambos com a senha `senha-de-teste`, 6 concedentes e 7 convênios fictícios (`tools/seed.mjs`). Antes de abrir PR: `./tools/ci` (formatação, análise, testes Flutter, de regras e das Functions); o GitHub Actions roda o mesmo script.
+O seed cria `divisao@exemplo.test` (papel `divisao`, vê tudo) e `externo@exemplo.test` (sem papel, é barrado), ambos com a senha `senha-de-teste`, 6 concedentes e 7 convênios fictícios (`tools/seed.mjs`). Antes de abrir PR: `./tools/ci` (formatação, análise, testes Flutter, de regras e das Functions, incluindo o teste das Functions contra o emulador); o GitHub Actions roda o mesmo script.
+
+### Importar um XML do Drupal no emulador (1b, RF07)
+
+Para testar com volume. O comando recusa rodar sem `FIRESTORE_EMULATOR_HOST`, então não grava na nuvem. O XML real nunca entra no repositório (`conveniosestagio.xml` e `reports/` estão no `.gitignore`).
+
+```bash
+(cd functions && npm run build)
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node functions/lib/importarCli.js conveniosestagio.xml --simular
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node functions/lib/importarCli.js conveniosestagio.xml
+```
+
+O relatório de rejeitados e avisos sai em `reports/importacao.csv` (separado por `;`, abre no Excel). Na nuvem, a importação é feita pela Function `importarConveniosDrupal`, só com o papel `divisao`.
 
 ### Android
 

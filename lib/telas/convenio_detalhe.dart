@@ -264,6 +264,10 @@ class _Historico extends StatelessWidget {
   String _descricao(RegistroHistorico r) => switch (r.acao) {
     'criado' => 'criou o convênio',
     'etapa' => 'registrou a etapa ${TipoEtapa.de(r.campos.firstOrNull).rotulo}',
+    'importado' => 'importou do estagio.uff.br (Drupal)',
+    'reimportado' =>
+      'atualizou pela importação do Drupal: '
+          '${r.campos.map(_rotuloCampo).join(', ')}',
     _ => 'alterou: ${r.campos.map(_rotuloCampo).join(', ')}',
   };
 
