@@ -1,6 +1,6 @@
 # STEPS — Sistema de Estágios UFF (app Flutter + Firebase)
 
-Estado em 28/10/2026: **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme, `docs/CRIAR-PROD.md`; não bloqueia a Fase 1, que usa só os emuladores). **Fase 1 aberta por exceção, decidida em 28/10/2026 (projeto piloto): incremento 1a em andamento** (concedentes, convênios, etapas e histórico, com regras reais do Firestore). A STI é ignorada até a migração para a UFF.
+Estado em 28/10/2026 (fim do dia): **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme, `docs/CRIAR-PROD.md`). **Fase 1 aberta por exceção (projeto piloto): incremento 1a pronto e na `main`** (concedentes, convênios, etapas e histórico, com as regras reais do Firestore). **Demonstração publicada** em https://estagiosuff.web.app (código, seed e manual no PR 4). Decididas: D23, D24, D25, D26. **Aberta: D27** (acesso externo das concedentes, com login). A STI é ignorada até a migração para a UFF.
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
@@ -10,6 +10,26 @@ Estado em 28/10/2026: **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme
 | 3 | TCE e ciclo do estágio | Fora do escopo atual | Alta |
 
 Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) e só fecha com elas testadas.
+
+## Para continuar em outra máquina (ex.: o Cosme)
+
+1. `git clone https://github.com/estudio-max/estagio-da-uff-app.git` e `./tools/ci` (precisa de Flutter, Node 22, Java 21 e Firebase CLI). Deve fechar verde.
+2. Desenvolvimento local: emuladores + `npm run seed` + `flutter run -d chrome` (ver `README.md`).
+3. **PRs abertos para revisar e mergear** (a revisão de outro desenvolvedor é exigida pelo `CLAUDE.md`): o PR 4 (demonstração na nuvem e manual do usuário) e o PR 5 (decisões D26 e D27).
+4. **O que não está no GitHub, de propósito:** a senha da demonstração (pedir a quem a recebeu), a chave de serviço do `estagiosuff` (apagar depois da apresentação) e o `firebase login`. A configuração do app na nuvem vai por `--dart-define` (ver `docs/DEMO-NUVEM.md`).
+
+### Pendências com dono
+
+| Pendência | Quem |
+|---|---|
+| Ativar o plano Blaze no `estagiosuff` (necessário para Functions) | Cosme |
+| Criar o grupo do Google em `id.uff.br` e dar à conta de serviço permissão para ler os membros (D26) | Cosme |
+| Criar o projeto `prod` (`docs/CRIAR-PROD.md`) | Cosme |
+| D27: como a concedente entra (gov.br, e-mail com link ou Google), como se liga à empresa e o que vê | Cliente + equipe |
+
+### Próximos incrementos
+
+Pelo desenho atual: **login Google e papéis por grupo** (D26, depende do Blaze e do grupo), **1b** importação do XML do Drupal, **1c** página pública (HTML gerado, D24) e acesso externo conforme a D27, **1d** alertas de vencimento, **1e** painel.
 
 ## Fase 0 — Fundação
 
