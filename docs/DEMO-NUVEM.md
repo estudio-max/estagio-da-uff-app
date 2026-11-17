@@ -27,6 +27,10 @@ Já feitos no console do `estagiosuff`: Authentication com E-mail/senha ativado 
    firebase apps:sdkconfig web <APP_ID> --project estagiosuff
    ```
 
+3a. **Login com Google no mesmo domínio do site** (uma vez só): em https://console.cloud.google.com/apis/credentials?project=estagiosuff, abra o cliente OAuth *Web client (auto created by Google Service)* e, em *URIs de redirecionamento autorizados*, acrescente `https://estagiosuff.web.app/__/auth/handler` (sem tirar o do `firebaseapp.com`). Feito em 17/11/2026.
+
+   Por quê: com o `authDomain` em `estagiosuff.firebaseapp.com`, a janela do Google fica num domínio diferente do site e o navegador corta a comunicação com ela (no console aparece `Cross-Origin-Opener-Policy policy would block the window.closed call`); o app então mostra "Não foi possível entrar com o Google". Com o login no próprio `web.app`, o problema some. O Hosting já serve `/__/auth/handler` nesse domínio.
+
 4. **Build** com a configuração (a chave web do Firebase não é segredo, mas não vai para o repositório):
 
    ```bash
@@ -35,10 +39,10 @@ Já feitos no console do `estagiosuff`: Authentication com E-mail/senha ativado 
      --dart-define=FIREBASE_APP_ID=<appId> \
      --dart-define=FIREBASE_SENDER_ID=<messagingSenderId> \
      --dart-define=FIREBASE_PROJECT_ID=estagiosuff \
-     --dart-define=FIREBASE_AUTH_DOMAIN=estagiosuff.firebaseapp.com
+     --dart-define=FIREBASE_AUTH_DOMAIN=estagiosuff.web.app
    ```
 
-5. **Deploy** das regras e do site:
+5. **Deploy** das regras e do site (as Functions não entram aqui: publicá-las exige o `functions/.env.estagiosuff` de quem as configurou, senão a lista `EMAILS_AUTORIZADOS` é apagada):
 
    ```bash
    firebase deploy --only firestore:rules,firestore:indexes,hosting --project estagiosuff
