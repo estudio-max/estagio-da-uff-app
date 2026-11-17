@@ -23,6 +23,7 @@ class ConveniosPage extends StatefulWidget {
 class _ConveniosPageState extends State<ConveniosPage> {
   String _busca = '';
   Vigencia? _filtro;
+  int? _venceEm;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -74,6 +75,28 @@ class _ConveniosPageState extends State<ConveniosPage> {
               ],
             ),
           ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+            child: Row(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Text('Vence em:'),
+                ),
+                for (final dias in faixasVencimento)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: FilterChip(
+                      label: Text('até $dias dias'),
+                      selected: _venceEm == dias,
+                      onSelected: (marcado) =>
+                          setState(() => _venceEm = marcado ? dias : null),
+                    ),
+                  ),
+              ],
+            ),
+          ),
           Expanded(
             child: StreamBuilder<List<Convenio>>(
               stream: widget.repo.convenios(),
@@ -92,6 +115,9 @@ class _ConveniosPageState extends State<ConveniosPage> {
                 final lista =
                     todos.where((c) {
                       if (_filtro != null && c.vigencia(hoje) != _filtro) {
+                        return false;
+                      }
+                      if (_venceEm != null && !c.venceEm(hoje, _venceEm!)) {
                         return false;
                       }
                       return termo.isEmpty ||

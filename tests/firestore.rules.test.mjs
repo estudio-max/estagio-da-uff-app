@@ -157,3 +157,20 @@ test('histórico: quem e quando vêm do servidor e o registro é imutável', asy
   await assertSucceeds(getDoc(doc(divisao(), 'convenios/x/historico/h1')));
   await assertFails(getDocs(collection(semPapel(), 'convenios/x/historico')));
 });
+
+test('alertas de vencimento: a divisão lê, ninguém grava pelo app', async () => {
+  await env.withSecurityRulesDisabled((ctx) =>
+    setDoc(doc(ctx.firestore(), 'convenios/x/alertas/30_2026-10-30'), {
+      fim_vigencia: '2026-10-30',
+      antecedencia_dias: 30,
+    }),
+  );
+  const alerta = 'convenios/x/alertas/30_2026-10-30';
+  await assertSucceeds(getDoc(doc(divisao(), alerta)));
+  await assertFails(getDoc(doc(semPapel(), alerta)));
+  await assertFails(setDoc(doc(divisao(), 'convenios/x/alertas/90_2026-10-30'), {
+    fim_vigencia: '2026-10-30',
+    antecedencia_dias: 90,
+  }));
+  await assertFails(deleteDoc(doc(divisao(), alerta)));
+});

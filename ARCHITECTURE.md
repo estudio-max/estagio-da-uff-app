@@ -75,6 +75,15 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 - **Histórico (RF08):** `importado` ao criar e `reimportado` (com os campos) ao atualizar, com o autor da chamada. Concedente renomeada pela importação atualiza a cópia do nome nos convênios dela.
 - **Diferenças em relação ao Django:** data fora do formato `dd/mm/aa` é rejeitada com o motivo (lá derrubava a importação); registro rejeitado não deixa aviso no relatório. HTML cru dentro de um campo vira texto (lá se perdia).
 
+**Como a 1d ficou implementada (alertas de vencimento, RF05):**
+- **Onde:** `functions/src/alertas.ts` (regras, sem Firestore nem SMTP), `alertasFirestore.ts` (lê e grava; envio por SMTP com o `nodemailer`) e a Function agendada `enviarAlertasVencimento` (todo dia às 07h, fuso de Brasília). No app, o filtro "vence em" (30, 90, 180 e 365 dias) na lista e a seção "Alertas de vencimento enviados" no detalhe do convênio.
+- **Porta do Django** (`convenios/alertas.py`), com os mesmos casos de teste: só convênio vigente; a faixa é a menor antecedência já alcançada; um aviso por (convênio, fim da vigência, antecedência), com id `<antecedência>_<fim>` em `convenios/{id}/alertas`; aviso mais urgente já enviado cobre as faixas maiores (job parado vários dias manda só o mais urgente); renovar o fim reinicia os avisos; um único e-mail por dia, ordenado pelo vencimento; sem alertas, nenhum e-mail; sem `DIVISAO_EMAIL`, falha.
+- **Leitura:** só os convênios com `fim_vigencia` entre hoje e hoje + a maior antecedência (filtro de um campo, sem índice composto); a situação e o início são conferidos em memória.
+- **Configuração:** `DIVISAO_EMAIL`, `ALERTA_ANTECEDENCIAS_DIAS` (padrão 365,180,90,30, D3), `EMAIL_REMETENTE` e `APP_URL` em `functions/.env.<projeto>`; a URL do SMTP (com a senha) no segredo `SMTP_URL` do Secret Manager. Sem o segredo, o deploy das Functions pede para criá-lo. No emulador, sem SMTP, o e-mail sai no log.
+- **Regras do Firestore:** a Divisão lê `alertas`; ninguém grava pelo app (só o Admin SDK).
+- **Diferenças em relação ao Django:** lá o registro e o envio ficavam na mesma transação; aqui o e-mail sai primeiro e o registro vem depois. Se o envio falha, nada é marcado (igual); se o registro falha depois do envio, o aviso se repete no dia seguinte (repetido, nunca perdido). O e-mail traz um link para o app, não para o convênio, porque o app não tem endereço por tela; o número do convênio serve para a busca.
+- **Em aberto:** D3 (antecedências e quem recebe) e D21 (primeira execução em produção: por enquanto é a opção (a), como no Django, com todos os avisos num e-mail só).
+
 ## 4. Autenticação e autorização
 
 - **Divisão de Estágio:** papel `divisao` via *custom claim* do Firebase Auth, atribuído por Function administrativa. Só ela escreve (RN04).

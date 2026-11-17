@@ -60,6 +60,26 @@ class FirestoreRepositorio implements Repositorio {
       );
 
   @override
+  Stream<List<AlertaEnviado>> alertas(String convenioId) => _convenios
+      .doc(convenioId)
+      .collection('alertas')
+      .snapshots()
+      .map(
+        (s) => [
+          for (final d in s.docs)
+            if (lerData(d['fim_vigencia']) case final fim?)
+              AlertaEnviado(
+                antecedenciaDias: (d['antecedencia_dias'] as num).toInt(),
+                fimVigencia: fim,
+                enviadoEm: (d['enviado_em'] as Timestamp?)?.toDate(),
+              ),
+        ]..sort(_maisRecentePrimeiro),
+      );
+
+  static int _maisRecentePrimeiro(AlertaEnviado a, AlertaEnviado b) =>
+      (b.enviadoEm ?? DateTime(1900)).compareTo(a.enviadoEm ?? DateTime(1900));
+
+  @override
   Future<String> salvarConcedente(Concedente concedente) async {
     final erros = concedente.validar();
     if (erros.isNotEmpty) throw ErroNegocio(erros);

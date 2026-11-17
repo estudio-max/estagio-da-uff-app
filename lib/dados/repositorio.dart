@@ -17,6 +17,9 @@ abstract class Repositorio {
   Stream<List<Etapa>> etapas(String convenioId);
   Stream<List<RegistroHistorico>> historico(String convenioId);
 
+  /// RF05: avisos de vencimento enviados, do mais recente ao mais antigo.
+  Stream<List<AlertaEnviado>> alertas(String convenioId);
+
   /// RN03: documento único. Devolve o id.
   Future<String> salvarConcedente(Concedente concedente);
 

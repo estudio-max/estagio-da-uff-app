@@ -15,12 +15,17 @@ class RepositorioEmMemoria implements Repositorio {
   final List<Convenio> _convenios;
   final Map<String, List<Etapa>> _etapas = {};
   final Map<String, List<RegistroHistorico>> _historico = {};
+  final Map<String, List<AlertaEnviado>> _alertas = {};
   final _mudou = StreamController<void>.broadcast();
   var _seq = 0;
 
   /// Registro gravado fora do app (ex.: pela importação do Drupal).
   void registrarHistorico(String convenioId, RegistroHistorico r) =>
       (_historico[convenioId] ??= []).insert(0, r);
+
+  /// Aviso gravado pela Function de alertas (RF05).
+  void registrarAlerta(String convenioId, AlertaEnviado a) =>
+      (_alertas[convenioId] ??= []).insert(0, a);
 
   Stream<T> _observa<T>(T Function() ler) async* {
     yield ler();
@@ -45,6 +50,10 @@ class RepositorioEmMemoria implements Repositorio {
   @override
   Stream<List<RegistroHistorico>> historico(String id) =>
       _observa(() => [...?_historico[id]]);
+
+  @override
+  Stream<List<AlertaEnviado>> alertas(String id) =>
+      _observa(() => [...?_alertas[id]]);
 
   @override
   Future<String> salvarConcedente(Concedente c) async {
