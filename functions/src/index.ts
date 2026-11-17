@@ -34,7 +34,7 @@ const papeisComAcesso = (): string => env('PAPEIS_COM_ACESSO', 'OWNER,MANAGER,ME
 // Ponte provisória: lista de e-mails autorizados (ex.: ana@id.uff.br, bia@id.uff.br:MANAGER).
 // Se preenchida, vale no lugar do grupo; esvazie para voltar à API ou à Directory API.
 const emailsAutorizados = (): string => env('EMAILS_AUTORIZADOS');
-// Caminho provisório: API do grupo no Cloud Run (docs/API-GRUPO.md). Se vazio, usa a Directory API.
+// Caminho provisório: API do grupo no Cloud Run (docs/API-GRUPO.md), com GRUPO_EMAIL. Se vazio, usa a Directory API.
 const diretorioApiUrl = (): string => env('DIRECTORY_API_URL');
 // Caminho direto pela Directory API (delegação em todo o domínio).
 const diretorioSa = (): string => env('DIRECTORY_SA');
@@ -42,21 +42,14 @@ const diretorioSubject = (): string => env('DIRECTORY_SUBJECT');
 
 const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
 
-function diretorioConfigurado(): DiretorioGrupos {
+/** `autorizacao`: cabeçalho Authorization da chamada recebida (token de ID do Firebase de quem entrou). */
+function diretorioConfigurado(autorizacao: string): DiretorioGrupos {
   // Precedência: lista de e-mails, depois a API do grupo, depois a Directory API.
   if (emailsAutorizados().trim()) return criarDiretorioLista(emailsAutorizados());
   const urlApi = diretorioApiUrl().trim();
   if (urlApi) {
-    return criarDiretorioApi({
-      urlMembros: urlApi.replace(/\/+$/, ''),
-      // Identidade da própria Function (ID token do Google); nenhuma chave é guardada.
-      obterAutorizacao: async (audiencia) => {
-        const cliente = await auth.getIdTokenClient(audiencia);
-        const autorizacao = (await cliente.getRequestHeaders()).get('Authorization');
-        if (!autorizacao) throw new Error('sem token de identidade da Function');
-        return autorizacao;
-      },
-    });
+    // A API responde sobre o dono do token: repassa o token que o app mandou (`/membros/me`).
+    return criarDiretorioApi({ urlMembros: urlApi.replace(/\/+$/, ''), autorizacao });
   }
   if (!diretorioSa() || !diretorioSubject()) {
     throw new Error(
@@ -90,7 +83,7 @@ export const sincronizarPapel = onCall(async (req) => {
       dominio: dominioPermitido(),
       grupo: grupoEmail(),
       papeisComAcesso: lerPapeisComAcesso(papeisComAcesso()),
-      diretorio: diretorioConfigurado(),
+      diretorio: diretorioConfigurado(req.rawRequest.headers.authorization ?? ''),
     });
   } catch (e) {
     logger.error('consulta ao grupo falhou', { uid, erro: (e as Error).message });

@@ -3,7 +3,7 @@
 Como o sistema decide quem entra: a pessoa entra com a conta Google `@id.uff.br`; uma Function (`sincronizarPapel`) pergunta ao Google se ela está no grupo `estagios.uff@id.uff.br` e, se estiver, grava a marca `divisao` na conta. As regras do Firestore (RN04) só olham essa marca.
 
 ```
-Entrar com Google → app chama sincronizarPapel → Function consulta o grupo (Directory API)
+Entrar com Google → app chama sincronizarPapel → Function consulta o grupo (API do grupo ou Directory API)
    → é membro? grava divisao=true → app relê a marca → libera a Divisão
 ```
 
@@ -13,12 +13,21 @@ Quem executa: o Cosme (dono do projeto `estagiosuff`), com apoio de quem tem ace
 
 Para apresentar o protótipo com o login do idUFF sem esperar o grupo, a Function aceita uma **lista de e-mails** em `functions/.env.<projeto>` (`EMAILS_AUTORIZADOS`). Continua exigindo e-mail verificado `@id.uff.br`; só troca a fonte de quem pode. Para acrescentar alguém, edite a lista e rode `firebase deploy --only functions --project estagiosuff`. **A lista vale no lugar do grupo**: quando a leitura do grupo estiver pronta (API do Cosme ou Directory API), esvazie `EMAILS_AUTORIZADOS`. A API do grupo está em `docs/API-GRUPO.md`.
 
+## Caminho pela API do grupo (API do Cosme)
+
+Em vez da Directory API (passos 2 e 3 abaixo, que pedem delegação no Workspace), a Function pode perguntar à API do Cosme no Cloud Run. Contrato em `docs/API-GRUPO.md`. Nesse caminho:
+
+- **Valores** em `functions/.env.<projeto>`: `GRUPO_EMAIL=estagios.uff@id.uff.br`, `DIRECTORY_API_URL=https://<serviço>.a.run.app/grupos/estagios/membros` e `EMAILS_AUTORIZADOS` **vazio** (se preenchido, a lista vale no lugar do grupo).
+- **Nenhuma permissão no Google Cloud**: a Function repassa à API o token de ID do Firebase de quem entrou. O que precisa é o projeto Firebase (`estagiosuff`, depois o de produção) estar na **lista de projetos autorizados da API**, que o Cosme mantém.
+- **Publicar** só a Function do papel: `firebase deploy --only functions:sincronizarPapel --project estagiosuff`.
+- **Como conferir:** nos logs da `sincronizarPapel`, cada login gera `papel sincronizado` com o `motivo` (`ok`, `fora_do_grupo`…). Um `consulta ao grupo falhou` indica token recusado pela API (projeto não autorizado), URL errada ou API fora do ar; nesses casos ninguém perde nem ganha acesso.
+
 ## O que o sistema exige, e onde é conferido
 
 | Regra | Onde |
 |---|---|
 | E-mail verificado e terminado em `@id.uff.br` | Na Function (a dica `hd` da tela é só visual) |
-| Estar no grupo, com papel que dá acesso | Na Function, pela Directory API |
+| Estar no grupo, com papel que dá acesso | Na Function, pela API do grupo ou pela Directory API |
 | Só `divisao` lê e escreve os dados | Regras do Firestore |
 
 **Papéis do grupo.** No Google cada pessoa tem **um** papel no grupo (Proprietário, Gerente ou Membro), e Proprietário e Gerente já são membros. Os três dão acesso ao sistema (`PAPEIS_COM_ACESSO=OWNER,MANAGER,MEMBER`), como decidido em 11/11/2026, inclusive o Proprietário. Para tirar o acesso de um papel, retire-o dessa lista.
