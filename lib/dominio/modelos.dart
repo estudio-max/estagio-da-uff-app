@@ -314,6 +314,14 @@ class Convenio {
     }
   }
 
+  /// RF05 no painel: vigente e com fim nos próximos [dias] dias.
+  bool venceEm(DateTime hoje, int dias) {
+    final fim = fimVigencia;
+    return vigencia(hoje) == Vigencia.vigente &&
+        fim != null &&
+        !fim.isAfter(soData(hoje).add(Duration(days: dias)));
+  }
+
   /// Transição para finalizado registra a data; sair de finalizado a apaga.
   /// Convênio já finalizado (ex.: importado sem data, D19) não ganha "hoje".
   Convenio comSituacao(Situacao nova, DateTime hoje) {
@@ -400,4 +408,20 @@ List<String> camposAlterados(Convenio antes, Convenio depois) {
     for (final k in d.keys)
       if (k != 'concedente_nome' && a[k] != d[k]) k,
   ];
+}
+
+/// RF05: faixas do filtro "vence em" (as mesmas antecedências da D3).
+const faixasVencimento = [30, 90, 180, 365];
+
+/// Aviso de vencimento já enviado à Divisão (gravado só pela Function).
+class AlertaEnviado {
+  const AlertaEnviado({
+    required this.antecedenciaDias,
+    required this.fimVigencia,
+    this.enviadoEm,
+  });
+
+  final int antecedenciaDias;
+  final DateTime fimVigencia;
+  final DateTime? enviadoEm;
 }

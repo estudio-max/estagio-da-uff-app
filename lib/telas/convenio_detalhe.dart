@@ -48,6 +48,8 @@ class ConvenioDetalhe extends StatelessWidget {
                     const SizedBox(height: 24),
                     _Etapas(repo: repo, convenioId: id),
                     const SizedBox(height: 24),
+                    _Alertas(repo: repo, convenioId: id),
+                    const SizedBox(height: 24),
                     _Historico(repo: repo, convenioId: id),
                   ],
                 ),
@@ -318,6 +320,53 @@ class _Historico extends StatelessWidget {
                     '${dataBr(r.em)} ${r.em.hour.toString().padLeft(2, '0')}:'
                     '${r.em.minute.toString().padLeft(2, '0')}',
                   ),
+                ),
+            ],
+          );
+        },
+      ),
+    ],
+  );
+}
+
+/// RF05: avisos que a Function mandou à Divisão (só leitura).
+class _Alertas extends StatelessWidget {
+  const _Alertas({required this.repo, required this.convenioId});
+
+  final Repositorio repo;
+  final String convenioId;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Alertas de vencimento enviados',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      StreamBuilder<List<AlertaEnviado>>(
+        stream: repo.alertas(convenioId),
+        builder: (context, snap) {
+          final itens = snap.data ?? const <AlertaEnviado>[];
+          if (itens.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text('Nenhum alerta enviado.'),
+            );
+          }
+          return Column(
+            children: [
+              for (final a in itens)
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: Text(
+                    'Aviso de ${a.antecedenciaDias} dias '
+                    '(vencimento em ${dataBr(a.fimVigencia)})',
+                  ),
+                  subtitle: a.enviadoEm == null
+                      ? null
+                      : Text('Enviado em ${dataBr(a.enviadoEm!)}'),
                 ),
             ],
           );

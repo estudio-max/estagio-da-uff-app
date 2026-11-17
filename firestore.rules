@@ -78,6 +78,12 @@ service cloud.firestore {
           && request.resource.data.em == request.time;
         allow update, delete: if false;
       }
+
+      // RF05: avisos de vencimento enviados. Só a Function (Admin SDK) grava.
+      match /alertas/{alertaId} {
+        allow read: if divisao();
+        allow write: if false;
+      }
     }
 
     match /{document=**} {

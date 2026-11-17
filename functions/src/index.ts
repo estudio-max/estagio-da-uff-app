@@ -2,9 +2,13 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { setGlobalOptions } from 'firebase-functions/v2';
+import { defineSecret } from 'firebase-functions/params';
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
 import { GoogleAuth } from 'google-auth-library';
+import { ANTECEDENCIAS_PADRAO, enviarAlertas, hojeEmBrasilia, lerAntecedencias } from './alertas.js';
+import { type Enviador, dependenciasFirestore, enviadorSmtp } from './alertasFirestore.js';
 import { criarDiretorio } from './diretorio.js';
 import { criarDiretorioApi } from './diretorioApi.js';
 import { criarDiretorioLista } from './diretorioLista.js';
@@ -128,5 +132,42 @@ export const importarConveniosDrupal = onCall(
     const { csv: _csv, ...contagens } = resultado;
     logger.info('importação do Drupal', { uid: autor.uid, ...contagens });
     return resultado;
+  },
+);
+
+// RF05: SMTP no Secret Manager (`firebase functions:secrets:set SMTP_URL`); o resto vem do .env.
+const smtpUrl = defineSecret('SMTP_URL');
+
+/** No emulador, sem SMTP configurado, o e-mail sai no log (como o console do Django em debug). */
+function enviadorConfigurado(): Enviador {
+  const url = smtpUrl.value().trim();
+  if (url) return enviadorSmtp(url, env('EMAIL_REMETENTE', 'nao-responda@id.uff.br'));
+  if (process.env.FUNCTIONS_EMULATOR === 'true') {
+    return async (email) => {
+      logger.info('e-mail (emulador, não enviado)', email);
+    };
+  }
+  throw new Error('Defina o segredo SMTP_URL para enviar os alertas.');
+}
+
+/**
+ * RF05: alertas de vencimento para a Divisão, uma vez por dia (D3: antecedências em
+ * ALERTA_ANTECEDENCIAS_DIAS). Um único e-mail com os avisos novos; cada aviso fica
+ * registrado em `convenios/{id}/alertas` e não se repete. Se falhar, o dia seguinte reenvia.
+ */
+export const enviarAlertasVencimento = onSchedule(
+  { schedule: 'every day 07:00', timeZone: 'America/Sao_Paulo', secrets: [smtpUrl] },
+  async () => {
+    const enviados = await enviarAlertas(
+      hojeEmBrasilia(),
+      {
+        divisaoEmail: env('DIVISAO_EMAIL'),
+        antecedencias: lerAntecedencias(env('ALERTA_ANTECEDENCIAS_DIAS', ANTECEDENCIAS_PADRAO)),
+        appUrl: env('APP_URL'),
+      },
+      dependenciasFirestore(getFirestore(), enviadorConfigurado()),
+    );
+    // Só a contagem: o e-mail tem nomes de concedentes.
+    logger.info('alertas de vencimento', { enviados });
   },
 );

@@ -40,6 +40,10 @@ flutter run -d chrome                                  # terminal 2: o app
 
 O seed cria `divisao@exemplo.test` (papel `divisao`, vê tudo) e `externo@exemplo.test` (sem papel, é barrado), ambos com a senha `senha-de-teste`, 6 concedentes e 7 convênios fictícios (`tools/seed.mjs`). Antes de abrir PR: `./tools/ci` (formatação, análise, testes Flutter, de regras e das Functions, incluindo o teste das Functions contra o emulador); o GitHub Actions roda o mesmo script.
 
+### Alertas de vencimento no emulador (1d, RF05)
+
+A Function `enviarAlertasVencimento` roda sozinha todo dia às 07h (Brasília) no projeto. No emulador, o agendamento não dispara: a lógica é coberta por `npm test` e pelo teste contra o emulador (`npm run test:emulador`, em `functions/`). Sem o segredo `SMTP_URL`, o emulador só registra o e-mail no log. Para o projeto, configure `DIVISAO_EMAIL` e as demais variáveis em `functions/.env.<projeto>` (ver `functions/.env.example`) e crie o segredo com `firebase functions:secrets:set SMTP_URL --project <id>`.
+
 ### Importar um XML do Drupal no emulador (1b, RF07)
 
 Para testar com volume. O comando recusa rodar sem `FIRESTORE_EMULATOR_HOST`, então não grava na nuvem. O XML real nunca entra no repositório (`conveniosestagio.xml` e `reports/` estão no `.gitignore`).

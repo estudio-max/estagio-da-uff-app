@@ -271,4 +271,57 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('E-mail ou senha inválidos.'), findsOneWidget);
   });
+
+  // Porta de test_painel_filtra_por_vencimento_e_mostra_alertas (Django).
+  testWidgets('RF05: filtra por vencimento e mostra os alertas enviados', (
+    tester,
+  ) async {
+    final fimPerto = hoje.add(const Duration(days: 20));
+    final repo =
+        RepositorioEmMemoria(
+          concedentes: [empresa],
+          convenios: [
+            convenio(
+              'perto',
+              'PR-PERTO/2026',
+              hoje.subtract(const Duration(days: 700)),
+              fimPerto,
+            ),
+            convenio(
+              'longe',
+              'PR-LONGE/2026',
+              hoje.subtract(const Duration(days: 10)),
+              hoje.add(const Duration(days: 700)),
+            ),
+          ],
+        )..registrarAlerta(
+          'perto',
+          AlertaEnviado(
+            antecedenciaDias: 30,
+            fimVigencia: fimPerto,
+            enviadoEm: hoje,
+          ),
+        );
+    await abrir(
+      tester,
+      Scaffold(
+        body: ConveniosPage(repo: repo, agora: () => hoje),
+      ),
+    );
+    expect(find.textContaining('PR-LONGE/2026'), findsOneWidget);
+
+    await tester.tap(find.text('até 30 dias'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('PR-PERTO/2026'), findsOneWidget);
+    expect(find.textContaining('PR-LONGE/2026'), findsNothing);
+
+    await tester.tap(find.textContaining('PR-PERTO/2026'));
+    await tester.pumpAndSettle();
+    expect(find.text('Alertas de vencimento enviados'), findsOneWidget);
+    expect(
+      find.text('Aviso de 30 dias (vencimento em 26/10/2026)'),
+      findsOneWidget,
+    );
+    expect(find.text('Enviado em 06/10/2026'), findsOneWidget);
+  });
 }

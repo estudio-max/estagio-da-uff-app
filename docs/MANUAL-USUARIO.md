@@ -36,6 +36,7 @@ Na aba **Convênios**:
 
 - **Busca:** digite no campo de cima parte do nome da concedente, o número do convênio (por exemplo, `PR-212/2026`) ou o número do processo SEI. A lista se ajusta enquanto você digita.
 - **Filtros:** toque em um dos botões abaixo da busca para ver só um tipo de convênio. Toque em **Todos** para voltar a ver tudo.
+- **Vence em:** na linha de baixo, escolha **até 30 dias**, **até 90 dias**, **até 180 dias** ou **até 365 dias** para ver só os convênios vigentes que vencem nesse prazo. Toque de novo no mesmo botão para tirar o filtro.
 
 O que significa cada etiqueta colorida:
 
@@ -53,6 +54,7 @@ Toque no convênio na lista. Você verá:
 
 - os **dados** (número, processo SEI, datas de vigência, situação, tipo de minuta, objeto, observações);
 - o **andamento do processo**, com cada etapa e a data;
+- os **alertas de vencimento enviados**: todo dia o sistema avisa a Divisão por e-mail quando um convênio fica a 365, 180, 90 ou 30 dias do fim, uma vez em cada prazo; aqui aparece cada aviso e quando foi mandado;
 - o **histórico de alterações**, do mais novo para o mais antigo.
 
 Para voltar à lista, use a seta no canto superior esquerdo.
@@ -153,4 +155,4 @@ Verifique a conexão com a internet e tente de novo. Se persistir, avise quem ad
 
 ## O que ainda não existe nesta versão
 
-Estão previstos, mas **ainda não funcionam**: importar os convênios antigos do site, a página pública de consulta para empresas, os avisos automáticos de vencimento e o painel com gráficos.
+Estão previstos, mas **ainda não funcionam**: a página pública de consulta para empresas e o painel com gráficos. Os avisos automáticos de vencimento já estão prontos, mas só começam a chegar por e-mail quando o envio for configurado no servidor; até lá, use o filtro **Vence em** da lista de convênios.

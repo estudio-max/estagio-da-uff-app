@@ -167,4 +167,46 @@ void main() {
     final depois = antes.copyWith(numero: 'PR-002/2026', objeto: 'Estágio');
     expect(camposAlterados(antes, depois), ['numero', 'objeto']);
   });
+
+  group('RF05: filtro "vence em"', () {
+    test('vigente que vence dentro da faixa entra; fora dela, não', () {
+      final perto = novoConvenio(fim: hoje.add(const Duration(days: 20)));
+      final longe = novoConvenio(fim: hoje.add(const Duration(days: 700)));
+      expect(perto.venceEm(hoje, 30), isTrue);
+      expect(longe.venceEm(hoje, 30), isFalse);
+      expect(longe.venceEm(hoje, 365), isFalse);
+    });
+
+    test(
+      'o limite da faixa entra; vencido, tramitando e a iniciar ficam fora',
+      () {
+        expect(
+          novoConvenio(fim: hoje.add(const Duration(days: 30)))
+              .venceEm(hoje, 30),
+          isTrue,
+        );
+        expect(
+          novoConvenio(
+            inicio: DateTime(2020),
+            fim: hoje.subtract(const Duration(days: 1)),
+          ).venceEm(hoje, 30),
+          isFalse,
+        );
+        expect(
+          novoConvenio(
+            situacao: Situacao.emTramitacao,
+            fim: hoje.add(const Duration(days: 10)),
+          ).venceEm(hoje, 30),
+          isFalse,
+        );
+        expect(
+          novoConvenio(
+            inicio: hoje.add(const Duration(days: 1)),
+            fim: hoje.add(const Duration(days: 10)),
+          ).venceEm(hoje, 30),
+          isFalse,
+        );
+      },
+    );
+  });
 }
