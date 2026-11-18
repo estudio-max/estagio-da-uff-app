@@ -1,6 +1,6 @@
 # STEPS — Sistema de Estágios UFF (app Flutter + Firebase)
 
-Estado em 15/11/2026: **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme, `docs/CRIAR-PROD.md`). **Fase 1 aberta por exceção (projeto piloto): incremento 1a na `main`** (concedentes, convênios, etapas e histórico, com as regras reais do Firestore), **login com Google e papéis por grupo (D26) na `main`** (PR 6) e **1b (importação do XML do Drupal) na `main`** e **1d (alertas de vencimento) em PR**. **Demonstração publicada** em https://estagiosuff.web.app (código, seed e manual no PR 4). Decididas: D23, D24, D25, D26. **Aberta: D27** (acesso externo das concedentes, com login). A STI é ignorada até a migração para a UFF.
+Estado em 18/11/2026: **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme, `docs/CRIAR-PROD.md`). **Fase 1 aberta por exceção (projeto piloto): 1a, 1b e 1d na `main`** (concedentes, convênios, etapas e histórico; importação do XML do Drupal; alertas de vencimento), e **login com Google e papéis por grupo (D26) na `main` e em uso no `estagiosuff`** (a Function `sincronizarPapel` lê o grupo pela API do Cosme, `docs/API-GRUPO.md`). **Plano Blaze ativo no `estagiosuff`**, mas as Functions da 1b e da 1d ainda não foram publicadas lá. Nenhum PR aberto. **Demonstração publicada** em https://estagiosuff.web.app (código, seed e manual no PR 4). Decididas: D23, D24, D25, D26. **Aberta: D27** (acesso externo das concedentes, com login). A STI é ignorada até a migração para a UFF.
 
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
@@ -15,22 +15,21 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
 
 1. `git clone https://github.com/estudio-max/estagio-da-uff-app.git` e `./tools/ci` (precisa de Flutter, Node 22, Java 21 e Firebase CLI). Deve fechar verde.
 2. Desenvolvimento local: emuladores + `npm run seed` + `flutter run -d chrome` (ver `README.md`).
-3. **PR aberto para revisar e mergear** (a revisão de outro desenvolvedor é exigida pelo `CLAUDE.md`): o da 1d (alertas de vencimento). Os PRs 4 a 11 já estão na `main`.
+3. **Nenhum PR aberto.** Os PRs 4 a 14 já estão na `main` (a revisão de outro desenvolvedor continua exigida pelo `CLAUDE.md`).
 4. **O que não está no GitHub, de propósito:** a senha da demonstração (pedir a quem a recebeu), a chave de serviço do `estagiosuff` (apagar depois da apresentação) e o `firebase login`. A configuração do app na nuvem vai por `--dart-define` (ver `docs/DEMO-NUVEM.md`).
 
 ### Pendências com dono
 
 | Pendência | Quem |
 |---|---|
-| Ativar o plano Blaze no `estagiosuff` (necessário para Functions) | Cosme |
-| Criar o grupo do Google em `id.uff.br` e dar à conta de serviço permissão para ler os membros (D26) | Cosme |
+| Publicar no `estagiosuff` as Functions da importação (1b) e dos alertas (1d); hoje só estão lá `ola` e `sincronizarPapel` | Equipe |
 | Criar o projeto `prod` (`docs/CRIAR-PROD.md`) | Cosme |
 | SMTP para os alertas (1d): conta de envio, segredo `SMTP_URL` e `DIVISAO_EMAIL` no `.env` do projeto | Cosme |
 | D27: como a concedente entra (gov.br, e-mail com link ou Google), como se liga à empresa e o que vê | Cliente + equipe |
 
 ### Próximos incrementos
 
-Pelo desenho atual: **1c** página pública (HTML gerado, D24) e acesso externo conforme a D27, **1e** painel. Antes de 1c e 1e, a PROGRAD precisa responder D2, D4 e D22; a 1d foi feita com a premissa da D3 e ainda espera D3 e D21. A 1b ainda precisa rodar com o XML real no `dev` (exige o plano Blaze, para as Functions).
+Pelo desenho atual: **1c** página pública (HTML gerado, D24) e acesso externo conforme a D27, **1e** painel. Antes de 1c e 1e, a PROGRAD precisa responder D2, D4 e D22; a 1d foi feita com a premissa da D3 e ainda espera D3 e D21. Com o Blaze ativo, a 1b já pode rodar com o XML real no `dev`, depois de publicada a Function da importação (o XML não entra no repositório).
 
 ## Fase 0 — Fundação
 
