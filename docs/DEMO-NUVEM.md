@@ -18,7 +18,7 @@ Já feitos no console do `estagiosuff`: Authentication com E-mail/senha ativado 
 
 ## Passos
 
-1. **Authentication** (console do Firebase, projeto `estagiosuff`): em *Sign-in method*, habilite **E-mail/senha**. Em *Settings → User actions*, **desmarque "Enable create (sign-up)"** para ninguém se cadastrar sozinho.
+1. **Authentication** (console do Firebase, projeto `estagiosuff`): em *Sign-in method*, habilite **E-mail/senha** e **Google**. Em *Settings → User actions*, **deixe marcado "Enable create (sign-up)"**. Desmarcado, ele barra a criação de conta por qualquer provedor, inclusive o Google: ninguém consegue o primeiro login com a conta `@id.uff.br` (foi a causa da falha corrigida em 17/11/2026). Quem se cadastrar sozinho não vê nada: as regras do Firestore só liberam quem tem a claim `divisao`, que a Function `sincronizarPapel` só dá a `@id.uff.br` autorizado.
 2. **Firestore** (console): se ainda não existir, crie o banco `(default)` no modo produção, região `southamerica-east1`.
 3. **App web:** crie o app e pegue a configuração (o ID do app aparece na saída do primeiro comando).
 
@@ -26,6 +26,10 @@ Já feitos no console do `estagiosuff`: Authentication com E-mail/senha ativado 
    firebase apps:create web "Estágios UFF" --project estagiosuff
    firebase apps:sdkconfig web <APP_ID> --project estagiosuff
    ```
+
+3a. **Login com Google no mesmo domínio do site** (uma vez só): em https://console.cloud.google.com/apis/credentials?project=estagiosuff, abra o cliente OAuth *Web client (auto created by Google Service)* e, em *URIs de redirecionamento autorizados*, acrescente `https://estagiosuff.web.app/__/auth/handler` (sem tirar o do `firebaseapp.com`). Feito em 17/11/2026.
+
+   Por quê: com o `authDomain` em `estagiosuff.firebaseapp.com`, a janela do Google fica num domínio diferente do site e o navegador corta a comunicação com ela (no console aparece `Cross-Origin-Opener-Policy policy would block the window.closed call`); o app então mostra "Não foi possível entrar com o Google". Com o login no próprio `web.app`, o problema some. O Hosting já serve `/__/auth/handler` nesse domínio.
 
 4. **Build** com a configuração (a chave web do Firebase não é segredo, mas não vai para o repositório):
 
@@ -35,10 +39,10 @@ Já feitos no console do `estagiosuff`: Authentication com E-mail/senha ativado 
      --dart-define=FIREBASE_APP_ID=<appId> \
      --dart-define=FIREBASE_SENDER_ID=<messagingSenderId> \
      --dart-define=FIREBASE_PROJECT_ID=estagiosuff \
-     --dart-define=FIREBASE_AUTH_DOMAIN=estagiosuff.firebaseapp.com
+     --dart-define=FIREBASE_AUTH_DOMAIN=estagiosuff.web.app
    ```
 
-5. **Deploy** das regras e do site:
+5. **Deploy** das regras e do site (as Functions não entram aqui: publicá-las exige o `functions/.env.estagiosuff` de quem as configurou, senão a lista `EMAILS_AUTORIZADOS` é apagada):
 
    ```bash
    firebase deploy --only firestore:rules,firestore:indexes,hosting --project estagiosuff
@@ -63,5 +67,5 @@ Já feitos no console do `estagiosuff`: Authentication com E-mail/senha ativado 
 ## O que protege a demonstração
 
 - As regras do Firestore (RN04) só deixam o papel `divisao` ler e escrever, e ninguém exclui; um usuário sem papel não vê nada.
-- Sem cadastro aberto (passo 1), só quem recebeu a senha entra.
+- O cadastro fica aberto (passo 1) para o login com Google funcionar, mas uma conta nova não lê nem grava nada sem a claim `divisao`.
 - Os dados são fictícios: nomes inventados e CNPJs gerados.
