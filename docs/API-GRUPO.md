@@ -20,6 +20,8 @@ Authorization: Bearer <token de ID do Firebase de quem entrou>
 - O app chama a `sincronizarPapel` com o token de ID do Firebase da pessoa (o SDK das *callable functions* manda esse token no cabeçalho `Authorization`). A Function confere o token e **repassa o mesmo cabeçalho** à API. Nenhuma chave é guardada.
 - A API aceita só tokens de projetos Firebase que ela autorizou. **O projeto `estagiosuff` (e depois o de produção) precisa estar nessa lista**, e o token precisa trazer um e-mail `@id.uff.br` verificado.
 - O token vale por até 1 hora; a Function o usa na hora, dentro da mesma chamada.
+- **Em uso no `estagiosuff` desde 18/11/2026.** Até o projeto entrar na lista da API (escrito de início como `estagiouff`), toda consulta recebia 401 e ninguém ganhava nem perdia acesso.
+- A API não aceita chamadas de páginas web (CORS): só o servidor (a Function) a consulta.
 
 ## Respostas
 

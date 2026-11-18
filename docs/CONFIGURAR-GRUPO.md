@@ -9,11 +9,11 @@ Entrar com Google → app chama sincronizarPapel → Function consulta o grupo (
 
 Quem executa: o Cosme (dono do projeto `estagiosuff`), com apoio de quem tem acesso à conta de serviço da integração.
 
-## Ponte provisória: lista de e-mails (em uso a partir de 12/11/2026)
+## Ponte provisória: lista de e-mails (usada de 12/11 a 18/11/2026)
 
 Para apresentar o protótipo com o login do idUFF sem esperar o grupo, a Function aceita uma **lista de e-mails** em `functions/.env.<projeto>` (`EMAILS_AUTORIZADOS`). Continua exigindo e-mail verificado `@id.uff.br`; só troca a fonte de quem pode. Para acrescentar alguém, edite a lista e rode `firebase deploy --only functions --project estagiosuff`. **A lista vale no lugar do grupo**: quando a leitura do grupo estiver pronta (API do Cosme ou Directory API), esvazie `EMAILS_AUTORIZADOS`. A API do grupo está em `docs/API-GRUPO.md`.
 
-## Caminho pela API do grupo (API do Cosme)
+## Caminho pela API do grupo (em uso no `estagiosuff` desde 18/11/2026)
 
 Em vez da Directory API (passos 2 e 3 abaixo, que pedem delegação no Workspace), a Function pode perguntar à API do Cosme no Cloud Run. Contrato em `docs/API-GRUPO.md`. Nesse caminho:
 
