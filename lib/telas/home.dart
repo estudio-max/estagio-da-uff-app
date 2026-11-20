@@ -8,15 +8,15 @@ class Home extends StatefulWidget {
   const Home({
     required this.repo,
     required this.onSair,
-    this.telaImportacao,
+    this.telasImportacao = const {},
     super.key,
   });
 
   final Repositorio repo;
   final VoidCallback onSair;
 
-  /// RF07: tela de importação do Drupal; sem ela, o botão não aparece.
-  final WidgetBuilder? telaImportacao;
+  /// RF07: telas de importação, pelo rótulo do menu; sem elas, o botão não aparece.
+  final Map<String, WidgetBuilder> telasImportacao;
 
   @override
   State<Home> createState() => _HomeState();
@@ -30,13 +30,18 @@ class _HomeState extends State<Home> {
     appBar: AppBar(
       title: const Text('Estágios UFF · Divisão de Estágio'),
       actions: [
-        if (widget.telaImportacao case final tela?)
-          IconButton(
-            tooltip: 'Importar do estagio.uff.br',
+        if (widget.telasImportacao.isNotEmpty)
+          PopupMenuButton<WidgetBuilder>(
+            tooltip: 'Importar convênios',
             icon: const Icon(Icons.upload_file),
-            onPressed: () =>
+            onSelected: (tela) =>
                 Navigator.of(context)
                     .push(MaterialPageRoute<void>(builder: tela)),
+            itemBuilder: (_) => [
+              for (final MapEntry(:key, :value)
+                  in widget.telasImportacao.entries)
+                PopupMenuItem(value: value, child: Text(key)),
+            ],
           ),
         IconButton(
           tooltip: 'Sair',

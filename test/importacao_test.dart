@@ -1,4 +1,5 @@
-// RF07: tela de importação do XML do Drupal, com a Function substituída por um falso.
+// RF07: tela de importação (XML do Drupal e planilhas da Divisão), com a Function
+// substituída por um falso.
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -9,16 +10,17 @@ import 'package:material_ui/material_ui.dart';
 
 class ImportadorFalso implements Importador {
   final chamadas = <bool>[];
-  String? xmlRecebido;
+  List<String> arquivosRecebidos = const [];
   ErroImportacao? erro;
+  Map<String, int> situacoes = const {};
 
   @override
   Future<ResultadoImportacao> importar(
-    String xml, {
+    List<ArquivoImportacao> arquivos, {
     required bool simular,
   }) async {
     chamadas.add(simular);
-    xmlRecebido = xml;
+    arquivosRecebidos = [for (final a in arquivos) a.nome];
     if (erro case final e?) throw e;
     return ResultadoImportacao(
       lidos: 3,
@@ -27,35 +29,45 @@ class ImportadorFalso implements Importador {
       rejeitados: 1,
       avisos: 0,
       simulado: simular,
-      csv: '﻿situação;nó no Drupal;título;motivo\r\n',
+      csv: '﻿situação;origem;concedente;motivo\r\n',
+      situacoes: situacoes,
     );
   }
 }
 
-final arquivo = ArquivoXml(
+final xml = ArquivoImportacao(
   'conveniosestagio.xml',
   Uint8List.fromList(utf8.encode('﻿<nodes><node/></nodes>')),
 );
 
-Future<(ImportadorFalso, List<String>)> abrir(
+ArquivoImportacao planilha(String nome, [int bytes = 10]) =>
+    ArquivoImportacao(nome, Uint8List(bytes));
+
+Future<(ImportadorFalso, List<String>, List<List<String>>)> abrir(
   WidgetTester tester, {
-  ArquivoXml? escolhido,
+  FonteImportacao? fonte,
+  List<ArquivoImportacao>? escolhidos,
 }) async {
   final importador = ImportadorFalso();
   final salvos = <String>[];
+  final pedidos = <List<String>>[];
   tester.view.physicalSize = const Size(900, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     MaterialApp(
       home: ImportacaoPage(
+        fonte: fonte ?? FonteImportacao.site,
         importador: importador,
-        escolherArquivo: () async => escolhido ?? arquivo,
+        escolherArquivos: (extensoes, {required varios}) async {
+          pedidos.add([...extensoes, if (varios) 'vários']);
+          return escolhidos ?? [xml];
+        },
         salvarRelatorio: (nome, _) async => salvos.add(nome),
       ),
     ),
   );
-  return (importador, salvos);
+  return (importador, salvos, pedidos);
 }
 
 bool habilitado(WidgetTester tester, String texto) =>
@@ -93,21 +105,33 @@ void main() {
     );
   });
 
+  test('resultado lê as situações da importação das planilhas', () {
+    final r = ResultadoImportacao.fromMap({
+      'lidos': 2,
+      'situacoes': {'finalizado': 1, 'em_tramitacao': 1, 'cancelado': 0},
+    });
+    expect(r.situacoes, {'finalizado': 1, 'em_tramitacao': 1, 'cancelado': 0});
+    expect(ResultadoImportacao.fromMap({}).situacoes, isEmpty);
+  });
+
   testWidgets('só importa depois de simular, e pede confirmação', (
     tester,
   ) async {
-    final (importador, salvos) = await abrir(tester);
+    final (importador, salvos, pedidos) = await abrir(tester);
     expect(habilitado(tester, 'Simular (não grava)'), isFalse);
 
     await tester.tap(find.text('Escolher arquivo XML'));
     await tester.pumpAndSettle();
+    expect(pedidos, [
+      ['xml'],
+    ]);
     expect(find.textContaining('conveniosestagio.xml'), findsOneWidget);
     expect(habilitado(tester, 'Importar'), isFalse);
 
     await tester.tap(find.text('Simular (não grava)'));
     await tester.pumpAndSettle();
     expect(importador.chamadas, [true]);
-    expect(importador.xmlRecebido, '<nodes><node/></nodes>'); // sem o BOM
+    expect(importador.arquivosRecebidos, ['conveniosestagio.xml']);
     expect(find.text('Simulação: nada foi gravado'), findsOneWidget);
     expect(find.text('Seriam criados'), findsOneWidget);
 
@@ -132,7 +156,7 @@ void main() {
   });
 
   testWidgets('mostra o erro da Function', (tester) async {
-    final (importador, _) = await abrir(tester);
+    final (importador, _, _) = await abrir(tester);
     importador.erro = const ErroImportacao(
       'Só a Divisão de Estágio importa convênios.',
     );
@@ -150,14 +174,83 @@ void main() {
   testWidgets('arquivo que não é UTF-8 é recusado antes de enviar', (
     tester,
   ) async {
-    final (importador, _) = await abrir(
+    final (importador, _, _) = await abrir(
       tester,
-      escolhido: ArquivoXml('latin1.xml', Uint8List.fromList([0x3c, 0xe7])),
+      escolhidos: [
+        ArquivoImportacao('latin1.xml', Uint8List.fromList([0x3c, 0xe7])),
+      ],
     );
     await tester.tap(find.text('Escolher arquivo XML'));
     await tester.pumpAndSettle();
     expect(find.textContaining('não está em UTF-8'), findsOneWidget);
     expect(habilitado(tester, 'Simular (não grava)'), isFalse);
     expect(importador.chamadas, isEmpty);
+  });
+
+  group('planilhas da Divisão', () {
+    testWidgets('aceita as duas planilhas juntas e mostra as situações', (
+      tester,
+    ) async {
+      final (importador, _, pedidos) = await abrir(
+        tester,
+        fonte: FonteImportacao.planilhas,
+        escolhidos: [
+          planilha('CONVÊNIOS PRIVADOS 2022-2026.xlsx'),
+          planilha('CONVÊNIOS PÚBLICOS 2023-2026.xlsm'),
+        ],
+      );
+      importador.situacoes = {
+        'finalizado': 5,
+        'em_tramitacao': 2,
+        'cancelado': 1,
+      };
+      expect(find.text('Importar as planilhas da Divisão'), findsOneWidget);
+      await tester.tap(find.text('Escolher planilhas'));
+      await tester.pumpAndSettle();
+      expect(pedidos, [
+        ['xlsx', 'xlsm', 'vários'],
+      ]);
+      expect(find.textContaining('PRIVADOS'), findsOneWidget);
+      expect(find.textContaining('PÚBLICOS'), findsOneWidget);
+
+      await tester.tap(find.text('Simular (não grava)'));
+      await tester.pumpAndSettle();
+      expect(importador.arquivosRecebidos, hasLength(2));
+      expect(find.text('  Finalizados'), findsOneWidget);
+      expect(find.text('  Em tramitação'), findsOneWidget);
+      expect(find.text('  Cancelados'), findsOneWidget);
+    });
+
+    testWidgets('recusa arquivo que não é planilha', (tester) async {
+      final (importador, _, _) = await abrir(
+        tester,
+        fonte: FonteImportacao.planilhas,
+        escolhidos: [planilha('convenios.xlsx'), planilha('notas.pdf')],
+      );
+      await tester.tap(find.text('Escolher planilhas'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('notas.pdf não é uma planilha .xlsx ou .xlsm.'),
+        findsOneWidget,
+      );
+      expect(habilitado(tester, 'Simular (não grava)'), isFalse);
+      expect(importador.chamadas, isEmpty);
+    });
+
+    testWidgets('recusa planilhas acima de 7 MB juntas', (tester) async {
+      final (importador, _, _) = await abrir(
+        tester,
+        fonte: FonteImportacao.planilhas,
+        escolhidos: [
+          planilha('a.xlsx', 4 * 1024 * 1024),
+          planilha('b.xlsm', 4 * 1024 * 1024),
+        ],
+      );
+      await tester.tap(find.text('Escolher planilhas'));
+      await tester.pumpAndSettle();
+      expect(find.text('As planilhas passam de 7 MB juntas.'), findsOneWidget);
+      expect(habilitado(tester, 'Simular (não grava)'), isFalse);
+      expect(importador.chamadas, isEmpty);
+    });
   });
 }

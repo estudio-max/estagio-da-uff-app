@@ -7,6 +7,8 @@ import {
   planejarImportacao,
   relatorioCsv,
 } from './importacao.js';
+import { planejarImportacaoPlanilhas, relatorioPlanilhasCsv } from './importacaoPlanilhas.js';
+import { lerPlanilhas } from './planilhas.js';
 
 /** Limite do Firestore é 500 operações por lote; sobra folga. */
 const OPERACOES_POR_LOTE = 450;
@@ -31,7 +33,7 @@ export interface Autor {
  * Grava em lotes. As escritas de um registro vão sempre no mesmo lote: um registro entra
  * inteiro ou não entra. Se um lote falhar no meio, rodar de novo completa (idempotente).
  */
-export async function gravarPlano(db: Firestore, plano: Plano, autor: Autor): Promise<void> {
+export async function gravarPlano(db: Firestore, plano: Pick<Plano, 'grupos'>, autor: Autor): Promise<void> {
   let lote = db.batch();
   let operacoes = 0;
   for (const grupo of plano.grupos) {
@@ -89,5 +91,33 @@ export async function importarXml(
     avisos: relatorio.avisos.length,
     simulado: simular,
     csv: relatorioCsv(relatorio),
+  };
+}
+
+/**
+ * Lê as planilhas internas (um ou mais arquivos), planeja e (se não for simulação) grava.
+ * `hoje` em ISO, no fuso de Brasília.
+ */
+export async function importarPlanilhas(
+  db: Firestore,
+  arquivos: Buffer[],
+  autor: Autor,
+  simular: boolean,
+  hoje: string,
+): Promise<ResultadoImportacao & { situacoes: Record<string, number> }> {
+  const leitura = await lerPlanilhas(arquivos);
+  const estado = await carregarEstado(db);
+  const plano = planejarImportacaoPlanilhas(leitura, estado, hoje, () => db.collection('concedentes').doc().id);
+  if (!simular) await gravarPlano(db, plano, autor);
+  const { relatorio } = plano;
+  return {
+    lidos: relatorio.lidos,
+    criados: relatorio.criados,
+    atualizados: relatorio.atualizados,
+    rejeitados: relatorio.rejeitados.length,
+    avisos: relatorio.avisos.length,
+    situacoes: relatorio.situacoes,
+    simulado: simular,
+    csv: relatorioPlanilhasCsv(relatorio),
   };
 }

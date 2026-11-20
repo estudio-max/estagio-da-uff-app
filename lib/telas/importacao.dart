@@ -5,12 +5,81 @@ import 'package:material_ui/material_ui.dart';
 
 import '../dados/importacao.dart';
 
-/// Arquivo escolhido pela Divisão: nome e conteúdo bruto.
-class ArquivoXml {
-  const ArquivoXml(this.nome, this.bytes);
+/// O que se importa: textos da tela e a conferência dos arquivos antes de enviar.
+class FonteImportacao {
+  const FonteImportacao({
+    required this.titulo,
+    required this.explicacao,
+    required this.rotuloEscolher,
+    required this.extensoes,
+    required this.validar,
+    this.varios = false,
+  });
 
-  final String nome;
-  final Uint8List bytes;
+  /// RF07: XML exportado do estagio.uff.br (Drupal).
+  static final site = FonteImportacao(
+    titulo: 'Importar do estagio.uff.br',
+    explicacao:
+        'Envie o XML exportado do Drupal. Primeiro o sistema simula, '
+        'sem gravar nada; confira o resultado e só então importe. '
+        'Pode importar de novo: convênio já importado é atualizado, '
+        'sem duplicar.',
+    rotuloEscolher: 'Escolher arquivo XML',
+    extensoes: const ['xml'],
+    validar: _validarXml,
+  );
+
+  /// RF07: planilhas internas da Divisão (privados e públicos), de 2022 em diante.
+  static final planilhas = FonteImportacao(
+    titulo: 'Importar as planilhas da Divisão',
+    explicacao:
+        'Envie as planilhas de convênios privados e públicos (.xlsx ou '
+        '.xlsm), juntas ou uma de cada vez. Entram as abas de 2022 em '
+        'diante. Primeiro o sistema simula, sem gravar nada; confira o '
+        'resultado e o relatório e só então importe. Pode importar de novo: '
+        'o convênio é achado pelo código, pelo processo SEI ou pelo CNPJ com '
+        'o início, e é atualizado sem duplicar.',
+    rotuloEscolher: 'Escolher planilhas',
+    extensoes: const ['xlsx', 'xlsm'],
+    varios: true,
+    validar: _validarPlanilhas,
+  );
+
+  final String titulo;
+  final String explicacao;
+  final String rotuloEscolher;
+  final List<String> extensoes;
+  final bool varios;
+
+  /// Mensagem de erro, ou `null` se os arquivos podem ser enviados.
+  final String? Function(List<ArquivoImportacao>) validar;
+}
+
+String? _validarXml(List<ArquivoImportacao> arquivos) {
+  if (arquivos.length != 1) return 'Escolha um arquivo XML.';
+  try {
+    final xml = utf8.decode(arquivos.single.bytes).replaceFirst('\uFEFF', '');
+    return xml.trim().isEmpty ? 'O arquivo está vazio.' : null;
+  } on FormatException {
+    return 'O arquivo não está em UTF-8. Exporte o XML de novo do Drupal.';
+  }
+}
+
+/// A Function recebe até 7 MB (o pedido vai em base64, com limite de 10 MB).
+const maximoPlanilhasBytes = 7 * 1024 * 1024;
+
+String? _validarPlanilhas(List<ArquivoImportacao> arquivos) {
+  if (arquivos.isEmpty) return 'Escolha ao menos uma planilha.';
+  final outros = arquivos.where(
+    (a) => !RegExp(r'\.xls[xm]$', caseSensitive: false).hasMatch(a.nome),
+  );
+  if (outros.isNotEmpty) {
+    return '${outros.first.nome} não é uma planilha .xlsx ou .xlsm.';
+  }
+  final total = arquivos.fold<int>(0, (n, a) => n + a.bytes.length);
+  return total > maximoPlanilhasBytes
+      ? 'As planilhas passam de 7 MB juntas.'
+      : null;
 }
 
 /// Texto da confirmação antes de gravar, com singular e plural certos.
@@ -24,18 +93,33 @@ String textoConfirmacao(ResultadoImportacao r) {
       '(veja o relatório).';
 }
 
-/// RF07: a Divisão envia o XML exportado do estagio.uff.br. Primeiro simula,
-/// confere o resultado e só então grava.
+/// Rótulos das situações no resumo da importação das planilhas.
+const _rotulosSituacao = {
+  'finalizado': 'Finalizados',
+  'em_tramitacao': 'Em tramitação',
+  'cancelado': 'Cancelados',
+};
+
+/// RF07: a Divisão envia o XML do estagio.uff.br ou as planilhas internas.
+/// Primeiro simula, confere o resultado e só então grava.
 class ImportacaoPage extends StatefulWidget {
   const ImportacaoPage({
+    required this.fonte,
     required this.importador,
-    required this.escolherArquivo,
+    required this.escolherArquivos,
     required this.salvarRelatorio,
     super.key,
   });
 
+  final FonteImportacao fonte;
   final Importador importador;
-  final Future<ArquivoXml?> Function() escolherArquivo;
+
+  /// Recebe as extensões aceitas e se pode escolher vários; vazio se cancelou.
+  final Future<List<ArquivoImportacao>> Function(
+    List<String> extensoes, {
+    required bool varios,
+  })
+  escolherArquivos;
   final Future<void> Function(String nome, Uint8List bytes) salvarRelatorio;
 
   @override
@@ -43,41 +127,36 @@ class ImportacaoPage extends StatefulWidget {
 }
 
 class _ImportacaoPageState extends State<ImportacaoPage> {
-  ArquivoXml? _arquivo;
-  String? _xml;
+  List<ArquivoImportacao> _arquivos = const [];
+  bool _validos = false;
   ResultadoImportacao? _resultado;
   String? _erro;
   bool _ocupado = false;
 
   Future<void> _escolher() async {
-    final arquivo = await widget.escolherArquivo();
-    if (arquivo == null || !mounted) return;
-    String? xml;
-    String? erro;
-    try {
-      xml = utf8.decode(arquivo.bytes).replaceFirst('﻿', '');
-      if (xml.trim().isEmpty) erro = 'O arquivo está vazio.';
-    } on FormatException {
-      erro = 'O arquivo não está em UTF-8. Exporte o XML de novo do Drupal.';
-    }
+    final arquivos = await widget.escolherArquivos(
+      widget.fonte.extensoes,
+      varios: widget.fonte.varios,
+    );
+    if (arquivos.isEmpty || !mounted) return;
+    final erro = widget.fonte.validar(arquivos);
     setState(() {
-      _arquivo = arquivo;
-      _xml = erro == null ? xml : null;
+      _arquivos = arquivos;
+      _validos = erro == null;
       _resultado = null;
       _erro = erro;
     });
   }
 
   Future<void> _rodar({required bool simular}) async {
-    final xml = _xml;
-    if (xml == null) return;
+    if (!_validos) return;
     if (!simular && !await _confirmar()) return;
     setState(() {
       _ocupado = true;
       _erro = null;
     });
     try {
-      final r = await widget.importador.importar(xml, simular: simular);
+      final r = await widget.importador.importar(_arquivos, simular: simular);
       if (mounted) setState(() => _resultado = r);
     } on ErroImportacao catch (e) {
       if (mounted) setState(() => _erro = e.mensagem);
@@ -131,31 +210,29 @@ class _ImportacaoPageState extends State<ImportacaoPage> {
     final r = _resultado;
     final simulado = r != null && r.simulado;
     return Scaffold(
-      appBar: AppBar(title: const Text('Importar do estagio.uff.br')),
+      appBar: AppBar(title: Text(widget.fonte.titulo)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Envie o XML exportado do Drupal. Primeiro o sistema simula, '
-            'sem gravar nada; confira o resultado e só então importe. '
-            'Pode importar de novo: convênio já importado é atualizado, '
-            'sem duplicar.',
-          ),
+          Text(widget.fonte.explicacao),
           const SizedBox(height: 16),
           Row(
             children: [
               OutlinedButton.icon(
                 onPressed: _ocupado ? null : _escolher,
                 icon: const Icon(Icons.upload_file),
-                label: const Text('Escolher arquivo XML'),
+                label: Text(widget.fonte.rotuloEscolher),
               ),
               const SizedBox(width: 12),
-              if (_arquivo != null)
+              if (_arquivos.isNotEmpty)
                 Expanded(
                   child: Text(
-                    '${_arquivo!.nome} · '
-                    '${(_arquivo!.bytes.length / 1024).ceil()} KB',
+                    [
+                      for (final a in _arquivos)
+                        '${a.nome} · ${(a.bytes.length / 1024).ceil()} KB',
+                    ].join('\n'),
                     overflow: TextOverflow.ellipsis,
+                    maxLines: _arquivos.length,
                   ),
                 ),
             ],
@@ -166,7 +243,7 @@ class _ImportacaoPageState extends State<ImportacaoPage> {
             runSpacing: 8,
             children: [
               FilledButton.tonal(
-                onPressed: _ocupado || _xml == null
+                onPressed: _ocupado || !_validos
                     ? null
                     : () => _rodar(simular: true),
                 child: const Text('Simular (não grava)'),
@@ -240,6 +317,9 @@ class _Resumo extends StatelessWidget {
               r.simulado ? 'Seriam atualizados' : 'Atualizados',
               r.atualizados,
             ),
+            for (final MapEntry(:key, :value) in r.situacoes.entries)
+              if (_rotulosSituacao[key] case final rotulo?)
+                linha('  $rotulo', value),
             linha('Rejeitados', r.rejeitados),
             linha('Avisos', r.avisos),
             if (r.rejeitados + r.avisos > 0) ...[
