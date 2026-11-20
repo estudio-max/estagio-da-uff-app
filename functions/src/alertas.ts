@@ -36,9 +36,21 @@ export const diasEntre = (de: string, ate: string): number =>
 export const somarDias = (iso: string, dias: number): string =>
   new Date(emMs(iso) + dias * DIA_MS).toISOString().slice(0, 10);
 
-/** Data de hoje no fuso de Brasília, em ISO. */
-export const hojeEmBrasilia = (agora = new Date()): string =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(agora);
+/**
+ * Data de hoje no fuso de Brasília, em ISO. Monta a data pelas partes: o formato de um
+ * idioma (como o `en-CA`) muda conforme o ICU do Node, e o Node do Firebase CLI avulso
+ * devolvia `mm/dd/aaaa`, o que fazia convênio vigente parecer "a iniciar".
+ */
+export function hojeEmBrasilia(agora = new Date()): string {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(agora);
+  const parte = (tipo: string): string => partes.find((p) => p.type === tipo)?.value ?? '';
+  return `${parte('year')}-${parte('month')}-${parte('day')}`;
+}
 
 const dataBr = (iso: string): string => iso.split('-').reverse().join('/');
 

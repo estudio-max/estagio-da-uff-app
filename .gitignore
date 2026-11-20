@@ -13,6 +13,9 @@ GoogleService-Info.plist
 lib/firebase_options_prod.dart
 conveniosestagio.xml
 reports/
+*.xlsx
+*.xlsm
+*.xls
 # Node (Functions)
 node_modules/
 .idea/

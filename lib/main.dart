@@ -48,14 +48,24 @@ FirebaseFunctions get _functions =>
     FirebaseFunctions.instanceFor(region: 'southamerica-east1');
 
 /// RF07: a Divisão escolhe o XML exportado do Drupal.
-Future<ArquivoXml?> _escolherXml() async {
-  final arquivos = await FilePicker.pickFiles(
-    type: FileType.custom,
-    allowedExtensions: ['xml'],
-  );
-  if (arquivos.isEmpty) return null;
-  final f = arquivos.single;
-  return ArquivoXml(f.name, await f.readAsBytes());
+Future<List<ArquivoImportacao>> _escolherArquivos(
+  List<String> extensoes, {
+  required bool varios,
+}) async {
+  final arquivos = varios
+      ? await FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: extensoes,
+        )
+      : [
+          ?await FilePicker.pickFile(
+            type: FileType.custom,
+            allowedExtensions: extensoes,
+          ),
+        ];
+  return [
+    for (final f in arquivos) ArquivoImportacao(f.name, await f.readAsBytes()),
+  ];
 }
 
 Future<void> _salvarRelatorio(String nome, Uint8List bytes) =>
@@ -88,11 +98,20 @@ Future<void> main() async {
       // O Google só existe na nuvem; o emulador não tem o grupo para consultar.
       onGoogle: _nuvem ? _entrarComGoogle : null,
       sincronizarPapel: _sincronizarPapel,
-      telaImportacao: (_) => ImportacaoPage(
-        importador: FunctionsImportador(_functions),
-        escolherArquivo: _escolherXml,
-        salvarRelatorio: _salvarRelatorio,
-      ),
+      telasImportacao: {
+        'Planilhas da Divisão (2022 em diante)': (_) => ImportacaoPage(
+          fonte: FonteImportacao.planilhas,
+          importador: FunctionsImportadorPlanilhas(_functions),
+          escolherArquivos: _escolherArquivos,
+          salvarRelatorio: _salvarRelatorio,
+        ),
+        'Página do estagio.uff.br (XML)': (_) => ImportacaoPage(
+          fonte: FonteImportacao.site,
+          importador: FunctionsImportador(_functions),
+          escolherArquivos: _escolherArquivos,
+          salvarRelatorio: _salvarRelatorio,
+        ),
+      },
       repo: FirestoreRepositorio(
         FirebaseFirestore.instance,
         FirebaseAuth.instance,
@@ -108,7 +127,7 @@ class App extends StatelessWidget {
     this.demo = false,
     this.onGoogle,
     this.sincronizarPapel,
-    this.telaImportacao,
+    this.telasImportacao = const {},
     super.key,
   });
 
@@ -119,7 +138,7 @@ class App extends StatelessWidget {
   final bool demo;
   final Future<void> Function()? onGoogle;
   final Future<void> Function(User user)? sincronizarPapel;
-  final WidgetBuilder? telaImportacao;
+  final Map<String, WidgetBuilder> telasImportacao;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -171,7 +190,7 @@ class App extends StatelessWidget {
           child: Home(
             repo: repo,
             onSair: auth.signOut,
-            telaImportacao: telaImportacao,
+            telasImportacao: telasImportacao,
           ),
         );
       },

@@ -12,7 +12,7 @@ import { type Enviador, dependenciasFirestore, enviadorSmtp } from './alertasFir
 import { criarDiretorio } from './diretorio.js';
 import { criarDiretorioApi } from './diretorioApi.js';
 import { criarDiretorioLista } from './diretorioLista.js';
-import { importarXml } from './importacaoFirestore.js';
+import { importarPlanilhas, importarXml } from './importacaoFirestore.js';
 import { claimsComDivisao, decidirPapel, lerPapeisComAcesso, type DiretorioGrupos } from './papel.js';
 import { saudacao } from './saudacao.js';
 
@@ -124,6 +124,47 @@ export const importarConveniosDrupal = onCall(
     // Só contagens no log: o relatório tem nomes e CNPJs das concedentes.
     const { csv: _csv, ...contagens } = resultado;
     logger.info('importação do Drupal', { uid: autor.uid, ...contagens });
+    return resultado;
+  },
+);
+
+/** Soma do tamanho dos arquivos aceitos (o pedido da callable tem limite de 10 MB, em base64). */
+const MAXIMO_PLANILHAS_BYTES = 7 * 1024 * 1024;
+
+/**
+ * RF07: importa as planilhas internas da Divisão (convênios de 2022 em diante). Só a Divisão.
+ * Recebe `{ arquivos: [{ nome, conteudo (base64) }], simular }`; com `simular`, nada é gravado.
+ * Devolve as contagens e o relatório CSV de rejeitados e avisos. Pode rodar de novo.
+ */
+export const importarConveniosPlanilhas = onCall(
+  { timeoutSeconds: 540, memory: '1GiB' },
+  async (req) => {
+    if (req.auth?.token.divisao !== true) {
+      throw new HttpsError('permission-denied', 'Só a Divisão de Estágio importa convênios.');
+    }
+    const { arquivos, simular } = (req.data ?? {}) as { arquivos?: unknown; simular?: unknown };
+    if (
+      !Array.isArray(arquivos) ||
+      !arquivos.length ||
+      !arquivos.every((a) => typeof a?.conteudo === 'string' && a.conteudo.length > 0)
+    ) {
+      throw new HttpsError('invalid-argument', 'Envie as planilhas de convênios (.xlsx ou .xlsm).');
+    }
+    const buffers = arquivos.map((a: { conteudo: string }) => Buffer.from(a.conteudo, 'base64'));
+    if (buffers.reduce((n, b) => n + b.length, 0) > MAXIMO_PLANILHAS_BYTES) {
+      throw new HttpsError('invalid-argument', 'As planilhas passam de 7 MB juntas.');
+    }
+    const autor = { uid: req.auth.uid, email: (req.auth.token.email as string | undefined) ?? null };
+    let resultado;
+    try {
+      resultado = await importarPlanilhas(getFirestore(), buffers, autor, simular === true, hojeEmBrasilia());
+    } catch (e) {
+      logger.error('importação das planilhas falhou', { uid: autor.uid, erro: (e as Error).message });
+      throw new HttpsError('internal', 'A importação falhou. Confira se os arquivos são as planilhas de convênios; rodar de novo completa o que faltou.');
+    }
+    // Só contagens no log: o relatório tem nomes de concedentes e de pessoas.
+    const { csv: _csv, ...contagens } = resultado;
+    logger.info('importação das planilhas', { uid: autor.uid, ...contagens });
     return resultado;
   },
 );

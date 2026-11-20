@@ -26,6 +26,7 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
 | Criar o projeto `prod` (`docs/CRIAR-PROD.md`) | Cosme |
 | SMTP para os alertas (1d): conta de envio, segredo `SMTP_URL` e `DIVISAO_EMAIL` no `.env` do projeto | Cosme |
 | D27: como a concedente entra (gov.br, e-mail com link ou Google), como se liga à empresa e o que vê | Cliente + equipe |
+| D28: confirmar a correspondência ETAPA → situação, aditivos como convênios próprios e o que fazer com os 334 convênios em tramitação há mais de um ano (relatório da importação) | PROGRAD |
 
 ### Próximos incrementos
 
@@ -49,7 +50,7 @@ Pelo desenho atual: **1c** página pública (HTML gerado, D24) e acesso externo 
 Mesmos incrementos da versão Django, cada um com os **mesmos casos de teste** portados:
 
 1. **1a** — Concedente, convênio e etapas; cadastro no app; histórico de alterações (RF01, RF02, RF08).
-2. **1b** — Importação do XML do Drupal por Function (RF07); idempotente pelo `id_drupal`, relatório de rejeitados e avisos. *Feita (Function, tela de envio no app e testes); falta rodar com o XML real.*
+2. **1b** — Importação do XML do Drupal por Function (RF07); idempotente pelo `id_drupal`, relatório de rejeitados e avisos. *Feita (Function, tela de envio no app e testes); falta rodar com o XML real.* **Planilhas da Divisão (20/11/2026):** por decisão do cliente, os convênios vêm das planilhas internas, só de 2022 em diante (D28); o XML do site fica para os anteriores, se vierem. *Feita (Function `importarConveniosPlanilhas`, tela no app, testes) e rodada no emulador com as planilhas reais; falta a PROGRAD confirmar a D28 e publicar a Function.*
 3. **1c** — Página pública em HTML com busca e selo "a partir de" (RF03, RF04, RN01, RN08, MS06, MS07).
 4. **1d** — Alertas de vencimento: Function agendada diária (RF05, MS01 parcial). *Feita com a premissa da D3 (Function, filtro e alertas no app, testes); falta SMTP no projeto e as respostas de D3 e D21.*
 5. **1e** — Painel com indicadores e gráficos no app (RF06, MS05 parcial).

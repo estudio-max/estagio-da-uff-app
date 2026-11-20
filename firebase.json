@@ -46,7 +46,8 @@
         "node_modules",
         "lib/*.test.js",
         "lib/*.emulador.js",
-        "lib/importarCli.js"
+        "lib/importarCli.js",
+        "lib/planilhasFicticias.js"
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
