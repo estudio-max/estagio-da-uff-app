@@ -89,7 +89,11 @@ export interface Escrita {
   dados: Dados;
   novo: boolean;
   /** RF08: registro de histórico a criar junto, só para convênio. */
-  historico?: { acao: 'importado' | 'reimportado'; campos: string[] };
+  /** `_planilha`: veio das planilhas da Divisão (D28), e não do site. */
+  historico?: {
+    acao: 'importado' | 'reimportado' | 'importado_planilha' | 'reimportado_planilha';
+    campos: string[];
+  };
 }
 
 export interface Plano {

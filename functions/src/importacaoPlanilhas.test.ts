@@ -265,7 +265,7 @@ test('convênio em tramitação que depois ganha código é atualizado, não dup
   assert.equal(c.numero, 'PR-050/2026');
   assert.equal(c.situacao, 'finalizado');
   const escrita = depois.grupos.flat().find((e) => e.colecao === 'convenios');
-  assert.deepEqual(escrita?.historico?.acao, 'reimportado');
+  assert.deepEqual(escrita?.historico?.acao, 'reimportado_planilha');
 });
 
 test('sem código e sem processo: CNPJ com o mesmo início identifica', async () => {

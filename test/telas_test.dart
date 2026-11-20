@@ -262,6 +262,48 @@ void main() {
     );
   });
 
+  testWidgets('histórico mostra a importação das planilhas (RF07, D28)', (
+    tester,
+  ) async {
+    final repo =
+        RepositorioEmMemoria(
+            concedentes: [empresa],
+            convenios: [
+              convenio('p-1', 'PR-1/2026', DateTime(2026), DateTime(2030)),
+            ],
+          )
+          ..registrarHistorico(
+            'p-1',
+            RegistroHistorico(por: 'ana', em: hoje, acao: 'importado_planilha'),
+          )
+          ..registrarHistorico(
+            'p-1',
+            RegistroHistorico(
+              por: 'ana',
+              em: hoje,
+              acao: 'reimportado_planilha',
+              campos: const ['situacao'],
+            ),
+          );
+    await abrir(
+      tester,
+      ConvenioDetalhe(repo: repo, id: 'p-1', agora: () => hoje),
+    );
+    await tester.scrollUntilVisible(
+      find.textContaining('importou das planilhas da Divisão'),
+      200,
+    );
+    expect(
+      find.textContaining('importou das planilhas da Divisão'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('pela importação das planilhas: situação'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Drupal'), findsNothing);
+  });
+
   testWidgets('login com falha mostra erro', (tester) async {
     await abrir(
       tester,

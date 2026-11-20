@@ -50,7 +50,7 @@ test('simula sem gravar, importa, reimporta sem duplicar', async () => {
   assert.equal(concedente.get('documento'), CNPJ[0]);
   assert.equal(convenio.get('concedente_nome'), 'Empresa Fictícia Ltda');
   const historico = await convenio.ref.collection('historico').get();
-  assert.deepEqual(historico.docs.map((d) => [d.get('acao'), d.get('por')]), [['importado', 'd1']]);
+  assert.deepEqual(historico.docs.map((d) => [d.get('acao'), d.get('por')]), [['importado_planilha', 'd1']]);
 
   const reimportado = await importarPlanilhas(db, [arquivo], autor, false, HOJE);
   assert.equal(reimportado.criados, 0);

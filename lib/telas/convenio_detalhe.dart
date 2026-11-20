@@ -270,6 +270,10 @@ class _Historico extends StatelessWidget {
     'reimportado' =>
       'atualizou pela importação do Drupal: '
           '${r.campos.map(_rotuloCampo).join(', ')}',
+    'importado_planilha' => 'importou das planilhas da Divisão',
+    'reimportado_planilha' =>
+      'atualizou pela importação das planilhas: '
+          '${r.campos.map(_rotuloCampo).join(', ')}',
     _ => 'alterou: ${r.campos.map(_rotuloCampo).join(', ')}',
   };
 

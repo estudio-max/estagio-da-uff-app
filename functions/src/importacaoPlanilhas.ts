@@ -430,7 +430,7 @@ export function planejarImportacaoPlanilhas(
     relatorio.situacoes[final.situacao as Situacao]++;
     const antes = originais.convenios.get(id);
     if (!antes) {
-      grupoDoConvenio.set(id, [{ colecao: 'convenios', id, dados: final, novo: true, historico: { acao: 'importado', campos: [] } }]);
+      grupoDoConvenio.set(id, [{ colecao: 'convenios', id, dados: final, novo: true, historico: { acao: 'importado_planilha', campos: [] } }]);
       continue;
     }
     const mudados = camposMudados(antes, final);
@@ -442,7 +442,7 @@ export function planejarImportacaoPlanilhas(
         id,
         dados: Object.fromEntries(mudados.map((k) => [k, final[k]])),
         novo: false,
-        ...(campos.length ? { historico: { acao: 'reimportado' as const, campos } } : {}),
+        ...(campos.length ? { historico: { acao: 'reimportado_planilha' as const, campos } } : {}),
       },
     ]);
   }
