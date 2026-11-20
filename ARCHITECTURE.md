@@ -56,7 +56,7 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 | `convenios/{id}` | dados do convênio + **cópia** de nome, tipo, UF e cidade da concedente | desnormalizado para a página pública e os filtros; Function mantém a cópia em sincronia |
 | `convenios/{id}/etapas/{id}` | etapa | subcoleção |
 | `convenios/{id}/alertas/{antecedencia_fim}` | aviso enviado | o id do documento garante a unicidade |
-| `estatisticas/painel` | contadores do painel | recalculados por Function agendada: o Firestore não agrega por UF ou por ano com eficiência |
+| `estatisticas/painel` | contadores do painel | **não criada (1e):** o painel é calculado na hora pela Function `painelConvenios`; vira cache só se o volume de leituras pesar |
 
 "Vigência" (vigente, vencido, a iniciar) continua **derivada** das datas (RN02), calculada no app e nas Functions, nunca gravada.
 
@@ -91,6 +91,15 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 - **Regras do Firestore:** a Divisão lê `alertas`; ninguém grava pelo app (só o Admin SDK).
 - **Diferenças em relação ao Django:** lá o registro e o envio ficavam na mesma transação; aqui o e-mail sai primeiro e o registro vem depois. Se o envio falha, nada é marcado (igual); se o registro falha depois do envio, o aviso se repete no dia seguinte (repetido, nunca perdido). O e-mail traz um link para o app, não para o convênio, porque o app não tem endereço por tela; o número do convênio serve para a busca.
 - **Em aberto:** D3 (antecedências e quem recebe) e D21 (primeira execução em produção: por enquanto é a opção (a), como no Django, com todos os avisos num e-mail só).
+
+**Como a 1e ficou implementada (painel, RF06, MS05 parcial):**
+- **Onde:** `functions/src/painel.ts` (cálculo, sem Firestore), `painelFirestore.ts` (leitura) e a Function callable `painelConvenios`; no app, `lib/telas/painel.dart`, aberta pelo botão "Painel" da tela inicial.
+- **Porta do Django** (`convenios/painel.py` e o template), com os mesmos casos de teste: convênios por situação (RN02); vigentes que vencem em 30, 90 e 180 dias; vigentes por tipo de concedente, com todos os tipos; tempo de tramitação (média e mediana) dos finalizados no último ano, contado da primeira etapa registrada ou, sem etapas, do cadastro; os 10 convênios em tramitação há mais tempo, que abrem o detalhe.
+- **Por que numa Function e não no app:** a data do cadastro é a criação do documento (`createTime`), que só o Admin SDK enxerga, e a primeira etapa de cada convênio sai de uma só consulta (`collectionGroup('etapas')`), sem abrir as regras para consultas de grupo. Cada abertura do painel lê todos os convênios, as concedentes (só o tipo) e as etapas: alguns milhares de leituras com os dados das planilhas. Se pesar, guardar o resultado em `estatisticas/painel`.
+- **Calculado na hora**, não por agendamento: as contagens batem com o banco (critério de aceitação §6), inclusive logo depois de uma edição ou importação.
+- **Acesso:** só o papel `divisao` (premissa da D4); a Function recusa os demais.
+- **Limite conhecido:** convênio importado não tem etapas nem data de finalização (D19); o finalizado importado fica fora da média, e o em tramitação conta da data da importação. O relatório da importação das planilhas aponta os parados há mais de um ano (D28).
+- **Gráficos:** barras proporcionais nas contagens por situação e por tipo, sem biblioteca de gráficos.
 
 **Como a 1c ficou implementada (página pública, RF03, RF04, RN01, RN08):**
 - **Onde:** `functions/src/paginaPublica.ts` (regras e HTML, sem Firestore), `paginaPublicaFirestore.ts` (leitura) e a Function HTTP `paginaPublica`. O Hosting encaminha `/convenios` e `/convenios/**` para ela (`firebase.json`); o resto continua no app Flutter web (D24: HTML para o público, Flutter só para a Divisão).

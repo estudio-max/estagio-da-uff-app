@@ -9,6 +9,7 @@ import 'package:material_ui/material_ui.dart';
 import 'auth/login_page.dart';
 import 'dados/firestore_repositorio.dart';
 import 'dados/importacao.dart';
+import 'dados/painel.dart';
 import 'dados/repositorio.dart';
 import 'telas/home.dart';
 import 'telas/importacao.dart';
@@ -98,6 +99,7 @@ Future<void> main() async {
       // O Google só existe na nuvem; o emulador não tem o grupo para consultar.
       onGoogle: _nuvem ? _entrarComGoogle : null,
       sincronizarPapel: _sincronizarPapel,
+      painel: FunctionsPainel(_functions),
       telasImportacao: {
         'Planilhas da Divisão (2022 em diante)': (_) => ImportacaoPage(
           fonte: FonteImportacao.planilhas,
@@ -128,6 +130,7 @@ class App extends StatelessWidget {
     this.onGoogle,
     this.sincronizarPapel,
     this.telasImportacao = const {},
+    this.painel,
     super.key,
   });
 
@@ -139,6 +142,7 @@ class App extends StatelessWidget {
   final Future<void> Function()? onGoogle;
   final Future<void> Function(User user)? sincronizarPapel;
   final Map<String, WidgetBuilder> telasImportacao;
+  final FontePainel? painel;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -191,6 +195,7 @@ class App extends StatelessWidget {
             repo: repo,
             onSair: auth.signOut,
             telasImportacao: telasImportacao,
+            painel: painel,
           ),
         );
       },

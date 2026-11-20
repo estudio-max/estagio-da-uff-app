@@ -28,6 +28,8 @@ class _ConveniosPageState extends State<ConveniosPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     floatingActionButton: FloatingActionButton.extended(
+      // As duas abas ficam montadas (IndexedStack): cada botão precisa de tag própria.
+      heroTag: 'novo-convenio',
       onPressed: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ConvenioForm(repo: widget.repo),
