@@ -13,6 +13,8 @@ import { criarDiretorio } from './diretorio.js';
 import { criarDiretorioApi } from './diretorioApi.js';
 import { criarDiretorioLista } from './diretorioLista.js';
 import { importarPlanilhas, importarXml } from './importacaoFirestore.js';
+import { responder } from './paginaPublica.js';
+import { carregarPublicos } from './paginaPublicaFirestore.js';
 import { claimsComDivisao, decidirPapel, lerPapeisComAcesso, type DiretorioGrupos } from './papel.js';
 import { saudacao } from './saudacao.js';
 
@@ -205,3 +207,25 @@ export const enviarAlertasVencimento = onSchedule(
     logger.info('alertas de vencimento', { enviados });
   },
 );
+
+/**
+ * RF03/RF04/RN01: página pública de convênios, sem login (MS06). O Hosting encaminha
+ * `/convenios` e `/convenios/**` para cá (firebase.json). O HTML é gerado a cada pedido e
+ * fica em cache por até 10 minutos no Hosting: convênio finalizado aparece sem passo manual.
+ */
+export const paginaPublica = onRequest({ maxInstances: 10 }, async (req, res) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.set('Allow', 'GET, HEAD').status(405).send('');
+    return;
+  }
+  const hoje = hojeEmBrasilia();
+  const convenios = await carregarPublicos(getFirestore(), hoje);
+  const params = new URL(req.originalUrl, 'http://localhost').searchParams;
+  const { status, html } = responder(convenios, hoje, req.path, params);
+  res
+    .status(status)
+    .set('Content-Type', 'text/html; charset=utf-8')
+    .set('Cache-Control', status === 200 ? 'public, max-age=300, s-maxage=600' : 'public, max-age=60')
+    .set('X-Content-Type-Options', 'nosniff')
+    .send(html);
+});

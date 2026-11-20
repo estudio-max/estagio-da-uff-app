@@ -92,6 +92,15 @@ Na opção B, cada modelo vira um `type` do esquema GraphQL do Data Connect, e a
 - **Diferenças em relação ao Django:** lá o registro e o envio ficavam na mesma transação; aqui o e-mail sai primeiro e o registro vem depois. Se o envio falha, nada é marcado (igual); se o registro falha depois do envio, o aviso se repete no dia seguinte (repetido, nunca perdido). O e-mail traz um link para o app, não para o convênio, porque o app não tem endereço por tela; o número do convênio serve para a busca.
 - **Em aberto:** D3 (antecedências e quem recebe) e D21 (primeira execução em produção: por enquanto é a opção (a), como no Django, com todos os avisos num e-mail só).
 
+**Como a 1c ficou implementada (página pública, RF03, RF04, RN01, RN08):**
+- **Onde:** `functions/src/paginaPublica.ts` (regras e HTML, sem Firestore), `paginaPublicaFirestore.ts` (leitura) e a Function HTTP `paginaPublica`. O Hosting encaminha `/convenios` e `/convenios/**` para ela (`firebase.json`); o resto continua no app Flutter web (D24: HTML para o público, Flutter só para a Divisão).
+- **Porta do Django** (`convenios/views.py` e os templates), com os mesmos casos de teste: só convênio finalizado vigente ou a iniciar (este com o selo "A partir de", D18); busca por nome, nome fantasia, número, processo e CNPJ (sem diferenciar caixa); filtros por tipo e UF; 50 por página, mantendo os filtros; detalhe de convênio que não é público dá 404, sem revelar que existe; CPF não aparece nem é buscável (RN08); todo texto cadastrado é escapado. Mesmo visual (paleta do `tema.css` do Django).
+- **Leitura:** os convênios com `fim_vigencia` a partir de hoje (filtro de um campo, sem índice composto) e as concedentes deles, por `getAll`. A situação e o início são conferidos em memória. A leitura copia **só os campos públicos**: o que é interno não chega ao HTML nem por engano.
+- **Atualização (RN01):** o HTML é gerado a cada pedido e fica em cache por até 10 minutos no Hosting (`s-maxage=600`) e 5 no navegador; convênio finalizado aparece sem passo manual.
+- **Campos públicos:** premissa da D2 (os da página atual do site). Ficam fixos no código; a marcação por campo (RF03) espera a PROGRAD.
+- **Diferenças em relação ao Django:** os endereços são `/convenios` e `/convenios/<id do documento>` (lá a lista ficava na raiz); a busca roda em memória, o que basta para as centenas de convênios vigentes.
+- **Fora da 1c:** o acesso das concedentes com login (D27) fica para um incremento próprio, depois de a PROGRAD confirmar a premissa.
+
 ## 4. Autenticação e autorização
 
 - **Divisão de Estágio:** papel `divisao` via *custom claim* do Firebase Auth, atribuído por Function administrativa. Só ela escreve (RN04).

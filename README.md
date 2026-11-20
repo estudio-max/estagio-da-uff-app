@@ -40,6 +40,10 @@ flutter run -d chrome                                  # terminal 2: o app
 
 O seed cria `divisao@exemplo.test` (papel `divisao`, vê tudo) e `externo@exemplo.test` (sem papel, é barrado), ambos com a senha `senha-de-teste`, 6 concedentes e 7 convênios fictícios (`tools/seed.mjs`). Antes de abrir PR: `./tools/ci` (formatação, análise, testes Flutter, de regras e das Functions, incluindo o teste das Functions contra o emulador); o GitHub Actions roda o mesmo script.
 
+### Página pública no emulador (1c, RF04)
+
+Suba também o Hosting (`--only auth,firestore,functions,hosting`) e abra http://127.0.0.1:5000/convenios: a Function `paginaPublica` gera a lista e o detalhe a partir dos dados do emulador. O navegador guarda a página por 5 minutos; para ver uma mudança na hora, recarregue sem cache. As regras e o HTML são cobertos por `npm test` e a leitura no Firestore por `npm run test:emulador` (em `functions/`).
+
 ### Alertas de vencimento no emulador (1d, RF05)
 
 A Function `enviarAlertasVencimento` roda sozinha todo dia às 07h (Brasília) no projeto. No emulador, o agendamento não dispara: a lógica é coberta por `npm test` e pelo teste contra o emulador (`npm run test:emulador`, em `functions/`). Sem o segredo `SMTP_URL`, o emulador só registra o e-mail no log. Para o projeto, configure `DIVISAO_EMAIL` e as demais variáveis em `functions/.env.<projeto>` (ver `functions/.env.example`) e crie o segredo com `firebase functions:secrets:set SMTP_URL --project <id>`.
