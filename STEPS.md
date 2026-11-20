@@ -5,7 +5,7 @@ Estado em 20/11/2026: **Fase 0 fechada, exceto o projeto `prod`** (cabe ao Cosme
 | Fase | Objetivo | Status | Complexidade |
 |---|---|---|---|
 | 0 | Fundação: ferramentas, projetos Firebase, emuladores, CI, protótipo | Em andamento: `firebase.json`, `.firebaserc`, regras fechadas e emuladores (Auth, Firestore, Hosting) validados; projeto Flutter criado (android, ios, web; `flutter_lints`; analyze, format e teste de fumaça verdes) e testes de regras do Firestore (`npm run test:rules`); pipeline local `tools/ci` verde e GitHub Actions (`.github/workflows/ci.yml`, ainda não rodou no GitHub); Functions em TypeScript com teste; protótipo (login, lista e tela de convênio) funcionando no navegador contra os emuladores, com seed fictício. protótipo também validado num emulador Android (login, lista e tela de convênio). **Falta: `prod` (bloqueado por D25)** | Média |
-| 1 | MVP de convênios com paridade à versão Django | Em andamento: **1a** feita no app (domínio, regras do Firestore, telas e histórico, com os casos de teste portados); falta homologar. **1b** feita (Function de importação com os casos de teste portados e tela de envio no app; também importa as planilhas da Divisão, D28), publicada no `estagiosuff` em 20/11/2026; falta rodar com o XML real. **1d** feita com a premissa da D3 (Function agendada, filtro e alertas no app, casos de teste portados); falta SMTP no projeto e as respostas de D3 e D21. **1c** feita com a premissa da D2 (página pública em `/convenios`, gerada por Function, casos de teste portados), publicada no `estagiosuff` em 20/11/2026. 1e pendente | Média |
+| 1 | MVP de convênios com paridade à versão Django | Em andamento: **1a** feita no app (domínio, regras do Firestore, telas e histórico, com os casos de teste portados); falta homologar. **1b** feita (Function de importação com os casos de teste portados e tela de envio no app; também importa as planilhas da Divisão, D28), publicada no `estagiosuff` em 20/11/2026; falta rodar com o XML real. **1d** feita com a premissa da D3 (Function agendada, filtro e alertas no app, casos de teste portados); falta SMTP no projeto e as respostas de D3 e D21. **1c** feita com a premissa da D2 (página pública em `/convenios`, gerada por Function, casos de teste portados), publicada no `estagiosuff` em 20/11/2026. **1e** feita com a premissa da D4 (Function `painelConvenios` e tela do painel, casos de teste portados); falta publicar a Function | Média |
 | 2 | Solicitação externa via gov.br | Pendente | Média |
 | 3 | TCE e ciclo do estágio | Fora do escopo atual | Alta |
 
@@ -22,7 +22,7 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
 
 | Pendência | Quem |
 |---|---|
-| Publicar no `estagiosuff` a Function dos alertas (1d). As demais foram publicadas em 20/11/2026, com o segredo `SMTP_URL` criado com um valor provisório só para o deploy passar (ele confere os segredos de todas as Functions). Ao publicar, usar `--only` com as Functions e o `firebase-tools` do npm: o `firebase` avulso falha na etapa de build (`/bin/sh: Illegal option --`) | Equipe, depois da conta de envio |
+| Publicar no `estagiosuff` a Function do painel (1e), depois do merge, e a dos alertas (1d), depois da conta de envio. As demais foram publicadas em 20/11/2026, com o segredo `SMTP_URL` criado com um valor provisório só para o deploy passar (ele confere os segredos de todas as Functions). Ao publicar, usar `--only` com as Functions e o `firebase-tools` do npm: o `firebase` avulso falha na etapa de build (`/bin/sh: Illegal option --`) | Equipe, depois da conta de envio |
 | Criar o projeto `prod` (`docs/CRIAR-PROD.md`) | Cosme |
 | SMTP para os alertas (1d): uma conta de envio institucional (ex.: caixa `nao-responda` ou da Divisão), trocar o valor do segredo (`firebase functions:secrets:set SMTP_URL --project estagiosuff`, formato `smtps://usuario:senha@host:465`) e pôr `EMAIL_REMETENTE`, `APP_URL` e `DIVISAO_EMAIL` no `.env` do projeto | A definir (STI ou Divisão) |
 | D27: como a concedente entra (gov.br, e-mail com link ou Google), como se liga à empresa e o que vê | Cliente + equipe |
@@ -30,7 +30,7 @@ Toda fase entrega as melhorias sobre o SIGAA que lhe cabem (REQUIREMENTS §4.0) 
 
 ### Próximos incrementos
 
-Pelo desenho atual: acesso externo das concedentes conforme a D27 (depois de a PROGRAD confirmar a premissa) e **1e** painel. Antes da 1e, a PROGRAD precisa responder D4 e D22; a 1c foi feita com a premissa da D2 e ainda espera a resposta; a 1d foi feita com a premissa da D3 e ainda espera D3 e D21. Com o Blaze ativo, a 1b já pode rodar com o XML real no `dev`, depois de publicada a Function da importação (o XML não entra no repositório).
+Pelo desenho atual: acesso externo das concedentes conforme a D27 (depois de a PROGRAD confirmar a premissa). A 1e foi feita com a premissa da D4 (painel só da Divisão) e espera a resposta; a D22 (renovação) não faz parte do painel do Django e precisa ser refeita com os dados das planilhas; a 1c foi feita com a premissa da D2 e ainda espera a resposta; a 1d foi feita com a premissa da D3 e ainda espera D3 e D21. Com o Blaze ativo, a 1b já pode rodar com o XML real no `dev`, depois de publicada a Function da importação (o XML não entra no repositório).
 
 ## Fase 0 — Fundação
 
@@ -53,7 +53,7 @@ Mesmos incrementos da versão Django, cada um com os **mesmos casos de teste** p
 2. **1b** — Importação do XML do Drupal por Function (RF07); idempotente pelo `id_drupal`, relatório de rejeitados e avisos. *Feita (Function, tela de envio no app e testes); falta rodar com o XML real.* **Planilhas da Divisão (20/11/2026):** por decisão do cliente, os convênios vêm das planilhas internas, só de 2022 em diante (D28); o XML do site fica para os anteriores, se vierem. *Feita (Function `importarConveniosPlanilhas`, tela no app, testes) e rodada no emulador com as planilhas reais; falta a PROGRAD confirmar a D28 (a Function está publicada no `estagiosuff`; as planilhas reais só entram lá depois da confirmação).*
 3. **1c** — Página pública em HTML com busca e selo "a partir de" (RF03, RF04, RN01, RN08, MS06, MS07). *Feita com a premissa da D2 (Function `paginaPublica`, rotas no Hosting, testes); publicada no `estagiosuff` em 20/11/2026. O acesso externo das concedentes (D27) fica fora.*
 4. **1d** — Alertas de vencimento: Function agendada diária (RF05, MS01 parcial). *Feita com a premissa da D3 (Function, filtro e alertas no app, testes); falta SMTP no projeto e as respostas de D3 e D21.*
-5. **1e** — Painel com indicadores e gráficos no app (RF06, MS05 parcial).
+5. **1e** — Painel com indicadores e gráficos no app (RF06, MS05 parcial). *Feita com a premissa da D4 (Function `painelConvenios`, tela no app, testes); falta publicar a Function no `estagiosuff`.*
 
 - **Critério de conclusão:** os casos de teste da versão Django passam na nova plataforma; homologação com a Divisão; decisão de qual versão vai para produção.
 

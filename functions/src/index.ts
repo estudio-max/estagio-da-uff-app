@@ -15,6 +15,8 @@ import { criarDiretorioLista } from './diretorioLista.js';
 import { importarPlanilhas, importarXml } from './importacaoFirestore.js';
 import { responder } from './paginaPublica.js';
 import { carregarPublicos } from './paginaPublicaFirestore.js';
+import { calcularPainel } from './painel.js';
+import { carregarPainel } from './painelFirestore.js';
 import { claimsComDivisao, decidirPapel, lerPapeisComAcesso, type DiretorioGrupos } from './papel.js';
 import { saudacao } from './saudacao.js';
 
@@ -170,6 +172,18 @@ export const importarConveniosPlanilhas = onCall(
     return resultado;
   },
 );
+
+/**
+ * RF06 e MS05: indicadores do painel, calculados na hora (as contagens batem com o banco).
+ * Só a Divisão: premissa da D4 (painel interno) até a PROGRAD decidir o que é público.
+ */
+export const painelConvenios = onCall({ memory: '512MiB' }, async (req) => {
+  if (req.auth?.token.divisao !== true) {
+    throw new HttpsError('permission-denied', 'Só a Divisão de Estágio vê o painel.');
+  }
+  const hoje = hojeEmBrasilia();
+  return { hoje, ...calcularPainel(await carregarPainel(getFirestore()), hoje) };
+});
 
 // RF05: SMTP no Secret Manager (`firebase functions:secrets:set SMTP_URL`); o resto vem do .env.
 const smtpUrl = defineSecret('SMTP_URL');

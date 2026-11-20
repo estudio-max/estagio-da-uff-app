@@ -20,6 +20,7 @@ class _ConcedentesPageState extends State<ConcedentesPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     floatingActionButton: FloatingActionButton.extended(
+      heroTag: 'nova-concedente',
       onPressed: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ConcedenteForm(repo: widget.repo),
