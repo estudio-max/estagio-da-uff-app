@@ -5,6 +5,7 @@ import '../dados/repositorio.dart';
 import '../dominio/modelos.dart';
 import 'comum.dart';
 import 'convenio_detalhe.dart';
+import 'tema.dart';
 
 /// Chave da vigência na resposta da Function (RN02), na ordem do Django.
 const _vigencias = {
@@ -45,16 +46,6 @@ class _PainelPageState extends State<PainelPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Painel de convênios'),
-      actions: [
-        IconButton(
-          tooltip: 'Atualizar',
-          icon: const Icon(Icons.refresh),
-          onPressed: _atualizar,
-        ),
-      ],
-    ),
     body: FutureBuilder<Indicadores>(
       future: _dados,
       builder: (context, snap) {
@@ -87,6 +78,7 @@ class _PainelPageState extends State<PainelPage> {
         }
         return _Conteudo(
           dados: snap.data!,
+          aoAtualizar: _atualizar,
           abrirConvenio: (id) => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => ConvenioDetalhe(
@@ -103,37 +95,50 @@ class _PainelPageState extends State<PainelPage> {
 }
 
 class _Conteudo extends StatelessWidget {
-  const _Conteudo({required this.dados, required this.abrirConvenio});
+  const _Conteudo({
+    required this.dados,
+    required this.abrirConvenio,
+    required this.aoAtualizar,
+  });
 
   final Indicadores dados;
   final void Function(String id) abrirConvenio;
+  final VoidCallback aoAtualizar;
 
   @override
   Widget build(BuildContext context) {
     final d = dados;
     final media = d.tramitacaoMedia;
     final mediana = d.tramitacaoMediana;
+    final total = d.porVigencia.values.fold(0, (a, b) => a + b);
+    final vigentes = d.porVigencia['vigente'] ?? 0;
     final secoes = [
-      _Secao(
-        titulo: 'Convênios por situação',
+      Secao(
+        titulo: 'Vigentes que vencem',
+        nota: 'Acumulado: cada faixa inclui as anteriores.',
         children: [
-          for (final MapEntry(:key, :value) in _vigencias.entries)
+          for (final MapEntry(:key, :value) in d.vencendo.entries)
             _Barra(
-              rotulo: value.rotulo,
-              valor: d.porVigencia[key] ?? 0,
-              total: d.porVigencia.values.fold(0, (a, b) => a + b),
-              cor: corVigencia(value),
+              rotulo: 'nos próximos $key dias',
+              valor: value,
+              total: vigentes,
+              cor: key <= faixasVencimento.first ? Cores.alerta : Cores.azul,
             ),
         ],
       ),
-      _Secao(
-        titulo: 'Vigentes que vencem',
+      Secao(
+        titulo: 'Vigentes por tipo de concedente',
         children: [
-          for (final MapEntry(:key, :value) in d.vencendo.entries)
-            _Linha('nos próximos $key dias', '$value'),
+          for (final t in TipoConcedente.values)
+            _Barra(
+              rotulo: t.rotulo,
+              valor: d.porTipo[t.valor] ?? 0,
+              total: vigentes,
+              cor: Cores.azul,
+            ),
         ],
       ),
-      _Secao(
+      Secao(
         titulo: 'Tempo de tramitação',
         nota:
             'Da primeira etapa registrada (ou do cadastro) até a '
@@ -141,87 +146,222 @@ class _Conteudo extends StatelessWidget {
         children: [
           if (media == null || mediana == null)
             const Text('Nenhum convênio finalizado no período.')
-          else ...[
-            _Linha('Média', _dias(media)),
-            _Linha('Mediana', _dias(mediana)),
-            _Linha('Convênios considerados', '${d.tramitacaoAmostra}'),
-          ],
-        ],
-      ),
-      _Secao(
-        titulo: 'Vigentes por tipo de concedente',
-        children: [
-          for (final t in TipoConcedente.values)
-            _Barra(
-              rotulo: t.rotulo,
-              valor: d.porTipo[t.valor] ?? 0,
-              total: d.porVigencia['vigente'] ?? 0,
-              cor: Theme.of(context).colorScheme.primary,
+          else
+            Wrap(
+              spacing: 32,
+              runSpacing: 16,
+              children: [
+                _Numero('Média', _dias(media)),
+                _Numero('Mediana', _dias(mediana)),
+                _Numero('Convênios considerados', '${d.tramitacaoAmostra}'),
+              ],
             ),
         ],
       ),
-    ];
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [for (final s in secoes) SizedBox(width: 360, child: s)],
-        ),
-        const SizedBox(height: 16),
-        _Secao(
-          titulo: 'Em tramitação há mais tempo',
-          children: [
-            if (d.parados.isEmpty)
-              const Text('Nenhum convênio em tramitação.')
-            else
-              for (final p in d.parados)
-                ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(p.concedente),
-                  subtitle: Text(p.numero.isEmpty ? 'sem número' : p.numero),
-                  trailing: Text(
-                    _dias(p.dias.toDouble()),
-                    style: const TextStyle(
-                      fontFeatures: [FontFeature.tabularFigures()],
+      Secao(
+        titulo: 'Em tramitação há mais tempo',
+        children: [
+          if (d.parados.isEmpty)
+            const Text('Nenhum convênio em tramitação.')
+          else
+            for (final p in d.parados)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Material(
+                  color: fundoVigencia(Vigencia.emTramitacao),
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => abrirConvenio(p.id),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  p.concedente,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  p.numero.isEmpty ? 'sem número' : p.numero,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Cores.textoFraco,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            _dias(p.dias.toDouble()),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: corVigencia(Vigencia.emTramitacao),
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  onTap: () => abrirConvenio(p.id),
                 ),
+              ),
+        ],
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, r) {
+        final margem = r.maxWidth >= larguraLarga ? 32.0 : 16.0;
+        final largura = (r.maxWidth - 2 * margem).clamp(0, 1200).toDouble();
+        final colunas = largura >= 760 ? 2 : 1;
+        final larguraSecao = (largura - 24 * (colunas - 1)) / colunas;
+        return ListView(
+          padding: EdgeInsets.fromLTRB(margem, 28, margem, 48),
+          children: [
+            Centralizado(
+              larguraMaxima: 1200,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CabecalhoPagina(
+                    titulo: 'Painel de convênios',
+                    subtitulo: d.hoje.isEmpty
+                        ? null
+                        : 'Situação em ${_dataDoPainel(d.hoje)} · $total convênios',
+                    acoes: [
+                      OutlinedButton.icon(
+                        onPressed: aoAtualizar,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Atualizar'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Secao(
+                    titulo: 'Convênios por situação',
+                    children: [
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          for (final MapEntry(:key, :value)
+                              in _vigencias.entries)
+                            _ContagemVigencia(value, d.porVigencia[key] ?? 0),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 24,
+                    runSpacing: 24,
+                    children: [
+                      for (final s in secoes)
+                        SizedBox(width: larguraSecao, child: s),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
-class _Secao extends StatelessWidget {
-  const _Secao({required this.titulo, required this.children, this.nota});
+/// A Function manda a data em ISO (aaaa-mm-dd); mostra dd/mm/aaaa.
+String _dataDoPainel(String iso) {
+  final d = DateTime.tryParse(iso);
+  return d == null ? iso : dataBr(d);
+}
 
-  final String titulo;
-  final List<Widget> children;
-  final String? nota;
+class _ContagemVigencia extends StatelessWidget {
+  const _ContagemVigencia(this.vigencia, this.valor);
+
+  final Vigencia vigencia;
+  final int valor;
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(titulo, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...children,
-          if (nota case final n?) ...[
-            const SizedBox(height: 8),
-            Text(n, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ],
-      ),
+  Widget build(BuildContext context) => Container(
+    width: 160,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      border: Border.all(color: Cores.borda),
+      borderRadius: BorderRadius.circular(12),
     ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: tomVigencia(vigencia),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                vigencia.rotulo,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, color: Cores.textoFraco),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$valor',
+          style: const TextStyle(
+            fontFamily: fonteTitulos,
+            fontWeight: FontWeight.w700,
+            fontSize: 30,
+            color: Cores.marinho,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _Numero extends StatelessWidget {
+  const _Numero(this.rotulo, this.valor);
+
+  final String rotulo;
+  final String valor;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        rotulo,
+        style: const TextStyle(fontSize: 13, color: Cores.textoFraco),
+      ),
+      Text(
+        valor,
+        style: const TextStyle(
+          fontFamily: fonteTitulos,
+          fontWeight: FontWeight.w700,
+          fontSize: 26,
+          color: Cores.marinho,
+        ),
+      ),
+    ],
   );
 }
 
@@ -236,10 +376,13 @@ class _Linha extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 3),
     child: Row(
       children: [
-        Expanded(child: Text(rotulo)),
+        Expanded(child: Text(rotulo, style: const TextStyle(fontSize: 14))),
         Text(
           valor,
-          style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
         ),
       ],
     ),
@@ -262,18 +405,19 @@ class _Barra extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 3),
+    padding: const EdgeInsets.symmetric(vertical: 4),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Linha(rotulo, '$valor'),
+        const SizedBox(height: 2),
         ClipRRect(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: total == 0 ? 0 : valor / total,
-            minHeight: 6,
+            minHeight: 8,
             color: cor,
-            backgroundColor: cor.withValues(alpha: 0.12),
+            backgroundColor: Cores.trilho,
           ),
         ),
       ],

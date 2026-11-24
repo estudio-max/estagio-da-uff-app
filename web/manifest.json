@@ -1,11 +1,11 @@
 {
-    "name": "estagios_uff",
-    "short_name": "estagios_uff",
+    "name": "Estágios UFF",
+    "short_name": "Estágios UFF",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F5F8FC",
+    "theme_color": "#12294F",
+    "description": "Convênios de estágio da UFF — Divisão de Estágio da PROGRAD.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -11,7 +11,7 @@ Future<void> abrir(WidgetTester tester, LoginPage tela) async {
 }
 
 void main() {
-  const botao = 'Entrar com Google (@id.uff.br)';
+  const botao = 'Entrar com a conta Google da UFF';
 
   testWidgets('sem onGoogle o botão do Google não aparece', (tester) async {
     await abrir(tester, LoginPage(onEntrar: (_, _) async {}));
@@ -57,7 +57,8 @@ void main() {
       ),
     );
     await tester.enterText(find.widgetWithText(TextField, 'E-mail'), ' a@b.c ');
-    await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
+    // Com o Google, ele é o botão principal e o de e-mail fica contornado.
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Entrar'));
     await tester.pumpAndSettle();
     expect(recebido, 'a@b.c');
   });

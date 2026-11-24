@@ -86,7 +86,8 @@ void main() {
   testWidgets('a Divisão abre o painel pela tela inicial', (tester) async {
     final fonte = PainelFalso(resposta());
     await abrir(tester, Home(repo: repo, onSair: () {}, painel: fonte));
-    await tester.tap(find.byTooltip('Painel'));
+    expect(fonte.chamadas, 0); // a seção só carrega quando aberta
+    await tester.tap(find.text('Painel'));
     await tester.pumpAndSettle();
     for (final trecho in [
       'Painel de convênios',
@@ -108,7 +109,7 @@ void main() {
 
   testWidgets('sem a fonte, o botão do painel não aparece', (tester) async {
     await abrir(tester, Home(repo: repo, onSair: () {}));
-    expect(find.byTooltip('Painel'), findsNothing);
+    expect(find.text('Painel'), findsNothing);
   });
 
   testWidgets('sem finalizados no período, não mostra média', (tester) async {

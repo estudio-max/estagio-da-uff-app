@@ -4,6 +4,7 @@ import '../dados/repositorio.dart';
 import '../dominio/modelos.dart';
 import 'comum.dart';
 import 'convenio_form.dart';
+import 'tema.dart';
 
 class ConvenioDetalhe extends StatelessWidget {
   const ConvenioDetalhe({
@@ -27,12 +28,15 @@ class ConvenioDetalhe extends StatelessWidget {
           title: Text(c?.concedenteNome ?? 'Convênio'),
           actions: [
             if (c != null)
-              IconButton(
-                tooltip: 'Editar',
-                icon: const Icon(Icons.edit),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => ConvenioForm(repo: repo, convenio: c),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: IconButton(
+                  tooltip: 'Editar',
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => ConvenioForm(repo: repo, convenio: c),
+                    ),
                   ),
                 ),
               ),
@@ -40,19 +44,55 @@ class ConvenioDetalhe extends StatelessWidget {
         ),
         body: c == null
             ? const Center(child: CircularProgressIndicator())
-            : Centralizado(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _Resumo(c: c, hoje: agora()),
-                    const SizedBox(height: 24),
+            : LayoutBuilder(
+                builder: (context, restricoes) {
+                  final hoje = agora();
+                  final principal = [
                     _Etapas(repo: repo, convenioId: id),
                     const SizedBox(height: 24),
+                    _Dados(c: c),
+                  ];
+                  final lateral = [
                     _Alertas(repo: repo, convenioId: id),
                     const SizedBox(height: 24),
                     _Historico(repo: repo, convenioId: id),
-                  ],
-                ),
+                  ];
+                  return Centralizado(
+                    larguraMaxima: 1140,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
+                      children: [
+                        _Resumo(c: c, hoje: hoje),
+                        if (c.inicioVigencia != null ||
+                            c.fimVigencia != null) ...[
+                          const SizedBox(height: 24),
+                          _Vigencia(c: c, hoje: hoje),
+                        ],
+                        const SizedBox(height: 24),
+                        if (restricoes.maxWidth >= larguraLarga)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Column(children: principal),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                flex: 2,
+                                child: Column(children: lateral),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          ...principal,
+                          const SizedBox(height: 24),
+                          ...lateral,
+                        ],
+                      ],
+                    ),
+                  );
+                },
               ),
       );
     },
@@ -69,7 +109,7 @@ class _Linha extends StatelessWidget {
   Widget build(BuildContext context) => valor.isEmpty
       ? const SizedBox.shrink()
       : Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -77,7 +117,7 @@ class _Linha extends StatelessWidget {
                 width: 150,
                 child: Text(
                   rotulo,
-                  style: TextStyle(color: Theme.of(context).hintColor),
+                  style: const TextStyle(fontSize: 14, color: Cores.textoFraco),
                 ),
               ),
               Expanded(child: Text(valor)),
@@ -86,6 +126,7 @@ class _Linha extends StatelessWidget {
         );
 }
 
+/// Concedente, vigência derivada (RN02), número e processo.
 class _Resumo extends StatelessWidget {
   const _Resumo({required this.c, required this.hoje});
 
@@ -94,49 +135,161 @@ class _Resumo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              c.numero.isEmpty ? 'Sem número' : c.numero,
+              style: tema.headlineSmall,
+            ),
+            SeloVigencia(c.vigencia(hoje)),
+          ],
+        ),
+        if (c.processoSei.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Processo SEI ${c.processoSei}',
+            style: tema.bodyLarge?.copyWith(
+              color: Cores.textoFraco,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Linha do tempo da vigência: início, hoje e fim.
+class _Vigencia extends StatelessWidget {
+  const _Vigencia({required this.c, required this.hoje});
+
+  final Convenio c;
+  final DateTime hoje;
+
+  @override
+  Widget build(BuildContext context) {
     final ini = c.inicioVigencia;
     final fim = c.fimVigencia;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final vigencia = c.vigencia(hoje);
+    final fracao = fracaoVigencia(c, hoje);
+    final prazo = prazoConvenio(c, hoje);
+    final destaque = switch (vigencia) {
+      Vigencia.vigente when fim != null =>
+        prazo?.texto ?? 'Faltam ${tempoRestante(hoje, fim)}',
+      _ => prazo?.texto,
+    };
+    Widget marco(String rotulo, String valor, CrossAxisAlignment alinhamento) =>
+        Column(
+          crossAxisAlignment: alinhamento,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    c.numero.isEmpty ? 'Sem número' : c.numero,
-                    style: Theme.of(context).textTheme.titleLarge,
+            Text(
+              rotulo,
+              style: const TextStyle(fontSize: 13, color: Cores.textoFraco),
+            ),
+            Text(
+              valor,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        );
+    return Secao(
+      titulo: 'Vigência',
+      acao: destaque == null
+          ? null
+          : Text(
+              destaque,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: prazo?.urgente ?? false
+                    ? Cores.alertaTexto
+                    : corVigencia(vigencia),
+              ),
+            ),
+      children: [
+        if (fracao != null) ...[
+          LayoutBuilder(
+            builder: (context, r) => SizedBox(
+              height: 22,
+              child: Stack(
+                alignment: Alignment.centerLeft,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: LinearProgressIndicator(
+                      value: fracao,
+                      minHeight: 10,
+                      color: prazo?.urgente ?? false
+                          ? Cores.alerta
+                          : tomVigencia(vigencia),
+                      backgroundColor: Cores.trilho,
+                    ),
                   ),
-                ),
-                SeloVigencia(c.vigencia(hoje)),
-              ],
+                  if (fracao > 0 && fracao < 1)
+                    Positioned(
+                      left: r.maxWidth * fracao - 1,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(width: 2, color: Cores.marinho),
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            _Linha('Processo SEI', c.processoSei),
-            _Linha(
-              'Vigência',
-              ini == null && fim == null
-                  ? ''
-                  : '${ini == null ? '—' : dataBr(ini)} a '
-                        '${fim == null ? '—' : dataBr(fim)}',
+          ),
+          const SizedBox(height: 10),
+        ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            marco(
+              'Início',
+              ini == null ? '—' : dataBr(ini),
+              CrossAxisAlignment.start,
             ),
-            _Linha('Situação', c.situacao.rotulo),
-            _Linha('Minuta', c.minuta.rotulo),
-            _Linha('Origem', c.origem.rotulo),
-            _Linha('Resolução CEP', c.resolucaoCep),
-            _Linha('Objeto', c.objeto),
-            _Linha('Observações', c.observacoesInternas),
-            _Linha(
-              'Finalizado em',
-              c.finalizadoEm == null ? '' : dataBr(c.finalizadoEm!),
+            if (fracao != null && fracao > 0 && fracao < 1)
+              marco('Hoje', dataBr(hoje), CrossAxisAlignment.center),
+            marco(
+              'Fim',
+              fim == null ? '—' : dataBr(fim),
+              CrossAxisAlignment.end,
             ),
           ],
         ),
-      ),
+      ],
     );
   }
+}
+
+class _Dados extends StatelessWidget {
+  const _Dados({required this.c});
+
+  final Convenio c;
+
+  @override
+  Widget build(BuildContext context) => Secao(
+    titulo: 'Dados do convênio',
+    children: [
+      _Linha('Situação', c.situacao.rotulo),
+      _Linha(
+        'Finalizado em',
+        c.finalizadoEm == null ? '' : dataBr(c.finalizadoEm!),
+      ),
+      _Linha('Minuta', c.minuta.rotulo),
+      _Linha('Origem', c.origem.rotulo),
+      _Linha('Resolução CEP', c.resolucaoCep),
+      _Linha('Objeto', c.objeto),
+      _Linha('Observações', c.observacoesInternas),
+    ],
+  );
 }
 
 class _Etapas extends StatelessWidget {
@@ -211,49 +364,105 @@ class _Etapas extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
+  Widget build(BuildContext context) => StreamBuilder<List<Etapa>>(
+    stream: repo.etapas(convenioId),
+    builder: (context, snap) {
+      final etapas = snap.data ?? const <Etapa>[];
+      return Secao(
+        titulo: 'Andamento do processo',
+        acao: FilledButton.tonalIcon(
+          onPressed: () => _nova(context),
+          icon: const Icon(Icons.add),
+          label: const Text('Registrar etapa'),
+        ),
         children: [
-          Expanded(
-            child: Text(
-              'Andamento do processo',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () => _nova(context),
-            icon: const Icon(Icons.add),
-            label: const Text('Registrar etapa'),
-          ),
-        ],
-      ),
-      StreamBuilder<List<Etapa>>(
-        stream: repo.etapas(convenioId),
-        builder: (context, snap) {
-          final etapas = snap.data ?? const <Etapa>[];
-          if (etapas.isEmpty) {
-            return const Padding(
+          if (etapas.isEmpty)
+            const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text('Nenhuma etapa registrada.'),
-            );
-          }
-          return Column(
+            )
+          else
+            for (var i = 0; i < etapas.length; i++)
+              _PassoEtapa(etapas[i], ultimo: i == etapas.length - 1),
+        ],
+      );
+    },
+  );
+}
+
+/// Um passo da linha do tempo das etapas: marca, traço até o próximo e texto.
+class _PassoEtapa extends StatelessWidget {
+  const _PassoEtapa(this.e, {required this.ultimo});
+
+  final Etapa e;
+  final bool ultimo;
+
+  @override
+  Widget build(BuildContext context) => IntrinsicHeight(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: 28,
+          child: Column(
             children: [
-              for (final e in etapas)
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.check_circle_outline),
-                  title: Text(e.tipo.rotulo),
-                  subtitle: e.observacao.isEmpty ? null : Text(e.observacao),
-                  trailing: Text(dataBr(e.data)),
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  color: Cores.azul,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check, size: 16, color: Colors.white),
+              ),
+              if (!ultimo)
+                Expanded(
+                  child: Container(width: 2, color: const Color(0xFFB9CDEB)),
                 ),
             ],
-          );
-        },
-      ),
-    ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(top: 4, bottom: ultimo ? 0 : 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        e.tipo.rotulo,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      dataBr(e.data),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Cores.textoFraco,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+                if (e.observacao.isNotEmpty)
+                  Text(
+                    e.observacao,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Cores.textoFraco,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -296,40 +505,37 @@ class _Historico extends StatelessWidget {
       campo;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Histórico de alterações',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      StreamBuilder<List<RegistroHistorico>>(
-        stream: repo.historico(convenioId),
-        builder: (context, snap) {
-          final itens = snap.data ?? const <RegistroHistorico>[];
-          if (itens.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('Sem registros.'),
-            );
-          }
-          return Column(
-            children: [
-              for (final r in itens)
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.history),
-                  title: Text('${r.por} ${_descricao(r)}'),
-                  subtitle: Text(
-                    '${dataBr(r.em)} ${r.em.hour.toString().padLeft(2, '0')}:'
-                    '${r.em.minute.toString().padLeft(2, '0')}',
-                  ),
+  Widget build(BuildContext context) => StreamBuilder<List<RegistroHistorico>>(
+    stream: repo.historico(convenioId),
+    builder: (context, snap) {
+      final itens = snap.data ?? const <RegistroHistorico>[];
+      return Secao(
+        titulo: 'Histórico de alterações',
+        children: [
+          if (itens.isEmpty)
+            const Text('Sem registros.')
+          else
+            for (final r in itens)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${r.por} ${_descricao(r)}'),
+                    Text(
+                      '${dataBr(r.em)} ${r.em.hour.toString().padLeft(2, '0')}:'
+                      '${r.em.minute.toString().padLeft(2, '0')}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Cores.textoFraco,
+                      ),
+                    ),
+                  ],
                 ),
-            ],
-          );
-        },
-      ),
-    ],
+              ),
+        ],
+      );
+    },
   );
 }
 
@@ -341,41 +547,62 @@ class _Alertas extends StatelessWidget {
   final String convenioId;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Alertas de vencimento enviados',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      StreamBuilder<List<AlertaEnviado>>(
-        stream: repo.alertas(convenioId),
-        builder: (context, snap) {
-          final itens = snap.data ?? const <AlertaEnviado>[];
-          if (itens.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('Nenhum alerta enviado.'),
-            );
-          }
-          return Column(
-            children: [
-              for (final a in itens)
-                ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.notifications_outlined),
-                  title: Text(
-                    'Aviso de ${a.antecedenciaDias} dias '
-                    '(vencimento em ${dataBr(a.fimVigencia)})',
-                  ),
-                  subtitle: a.enviadoEm == null
-                      ? null
-                      : Text('Enviado em ${dataBr(a.enviadoEm!)}'),
+  Widget build(BuildContext context) => StreamBuilder<List<AlertaEnviado>>(
+    stream: repo.alertas(convenioId),
+    builder: (context, snap) {
+      final itens = snap.data ?? const <AlertaEnviado>[];
+      return Secao(
+        titulo: 'Alertas de vencimento enviados',
+        children: [
+          if (itens.isEmpty)
+            const Row(
+              children: [
+                Icon(
+                  Icons.notifications_none,
+                  size: 20,
+                  color: Cores.textoFraco,
                 ),
-            ],
-          );
-        },
-      ),
-    ],
+                SizedBox(width: 10),
+                Expanded(child: Text('Nenhum alerta enviado.')),
+              ],
+            )
+          else
+            for (final a in itens)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.notifications_outlined,
+                      size: 20,
+                      color: Cores.textoFraco,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Aviso de ${a.antecedenciaDias} dias '
+                            '(vencimento em ${dataBr(a.fimVigencia)})',
+                          ),
+                          if (a.enviadoEm != null)
+                            Text(
+                              'Enviado em ${dataBr(a.enviadoEm!)}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Cores.textoFraco,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      );
+    },
   );
 }

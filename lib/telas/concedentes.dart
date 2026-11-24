@@ -4,6 +4,7 @@ import '../dados/repositorio.dart';
 import '../dominio/documentos.dart';
 import '../dominio/modelos.dart';
 import 'comum.dart';
+import 'tema.dart';
 
 class ConcedentesPage extends StatefulWidget {
   const ConcedentesPage({required this.repo, super.key});
@@ -17,84 +18,135 @@ class ConcedentesPage extends StatefulWidget {
 class _ConcedentesPageState extends State<ConcedentesPage> {
   String _busca = '';
 
+  void _nova() => Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => ConcedenteForm(repo: widget.repo)),
+  );
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    floatingActionButton: FloatingActionButton.extended(
-      heroTag: 'nova-concedente',
-      onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => ConcedenteForm(repo: widget.repo),
-        ),
-      ),
-      icon: const Icon(Icons.add),
-      label: const Text('Nova concedente'),
-    ),
-    body: Centralizado(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Buscar por nome, CPF ou CNPJ',
-                border: OutlineInputBorder(),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, restricoes) {
+      final largo = restricoes.maxWidth >= larguraLarga;
+      final margem = largo ? 32.0 : 16.0;
+      return Scaffold(
+        floatingActionButton: largo
+            ? null
+            : FloatingActionButton.extended(
+                heroTag: 'nova-concedente',
+                onPressed: _nova,
+                icon: const Icon(Icons.add),
+                label: const Text('Nova concedente'),
               ),
-              onChanged: (v) => setState(() => _busca = v),
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<List<Concedente>>(
-              stream: widget.repo.concedentes(),
-              builder: (context, snap) {
-                if (snap.hasError) {
-                  return const Center(
-                    child: Text('Não foi possível carregar.'),
-                  );
-                }
-                final todas = snap.data;
-                if (todas == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final termo = _busca.trim().toLowerCase();
-                final doc = normalizar(_busca).toLowerCase();
-                final lista = todas.where((c) {
-                  if (termo.isEmpty) return true;
-                  return c.razaoSocial.toLowerCase().contains(termo) ||
-                      c.nomeFantasia.toLowerCase().contains(termo) ||
-                      (doc.isNotEmpty &&
-                          (c.documento ?? '').toLowerCase().contains(doc));
-                }).toList();
-                if (lista.isEmpty) {
-                  return const Center(child: Text('Nenhuma concedente.'));
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.only(bottom: 88),
-                  itemCount: lista.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    final c = lista[i];
-                    return ListTile(
-                      title: Text(c.nome),
-                      subtitle: Text(
-                        '${c.documentoFormatado.isEmpty ? 'sem documento' : c.documentoFormatado}'
-                        ' · ${c.tipo.rotulo} · ${c.cidade}/${c.uf}',
+        body: Centralizado(
+          larguraMaxima: 1200 + 2 * margem,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(margem, 28, margem, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                CabecalhoPagina(
+                  titulo: 'Concedentes',
+                  subtitulo:
+                      'Empresas, órgãos e profissionais que oferecem estágio.',
+                  acoes: [
+                    if (largo)
+                      FilledButton.icon(
+                        onPressed: _nova,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Nova concedente'),
                       ),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) =>
-                              ConcedenteForm(repo: widget.repo, concedente: c),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
+                      side: BorderSide(color: Cores.borda),
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.search),
+                              hintText: 'Buscar por nome, CPF ou CNPJ',
+                            ),
+                            onChanged: (v) => setState(() => _busca = v),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
+                        const Divider(height: 1),
+                        Expanded(child: _lista()),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
+  );
+
+  Widget _lista() => StreamBuilder<List<Concedente>>(
+    stream: widget.repo.concedentes(),
+    builder: (context, snap) {
+      if (snap.hasError) {
+        return const Center(child: Text('Não foi possível carregar.'));
+      }
+      final todas = snap.data;
+      if (todas == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final termo = _busca.trim().toLowerCase();
+      final doc = normalizar(_busca).toLowerCase();
+      final lista = todas.where((c) {
+        if (termo.isEmpty) return true;
+        return c.razaoSocial.toLowerCase().contains(termo) ||
+            c.nomeFantasia.toLowerCase().contains(termo) ||
+            (doc.isNotEmpty && (c.documento ?? '').toLowerCase().contains(doc));
+      }).toList();
+      if (lista.isEmpty) {
+        return const Center(child: Text('Nenhuma concedente.'));
+      }
+      return ListView.separated(
+        padding: const EdgeInsets.only(bottom: 88),
+        itemCount: lista.length,
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, i) {
+          final c = lista[i];
+          return ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
+            ),
+            title: Text(
+              c.nome,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Cores.marinho,
+              ),
+            ),
+            subtitle: Text(
+              '${c.documentoFormatado.isEmpty ? 'sem documento' : c.documentoFormatado}'
+              ' · ${c.tipo.rotulo} · ${c.cidade}/${c.uf}',
+              style: const TextStyle(color: Cores.textoFraco),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) =>
+                    ConcedenteForm(repo: widget.repo, concedente: c),
+              ),
+            ),
+          );
+        },
+      );
+    },
   );
 }
 
