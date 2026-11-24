@@ -223,6 +223,23 @@ test('detalhe mostra os campos públicos', () => {
   }
 });
 
+test('razão social sempre, nome fantasia abaixo dela quando houver', () => {
+  const com = convenio(concedente('11222333000181', { razao_social: 'Alfa Tecnologia Ltda', nome_fantasia: 'AlfaTec' }));
+  const sem = convenio(concedente('12ABC34501DE35', { razao_social: 'Beta Saúde S.A.' }), 'PR-2/2026');
+  const lista = pagina([com, sem]);
+  for (const html of [lista, detalhe([com, sem], com)]) {
+    const razao = html.indexOf('Alfa Tecnologia Ltda', html.indexOf('<main'));
+    const fantasia = html.indexOf('AlfaTec<', razao);
+    assert.ok(razao >= 0, 'razão social');
+    assert.ok(fantasia > razao, 'nome fantasia abaixo da razão social');
+  }
+  assert.ok(lista.includes('<span class="fantasia">AlfaTec</span>'));
+  // Sem nome fantasia, só a razão social, sem linha vazia.
+  assert.ok(detalhe([com, sem], sem).includes('Beta Saúde S.A.'));
+  assert.ok(!detalhe([com, sem], sem).includes('Nome fantasia'));
+  assert.equal(lista.match(/class="fantasia"/g)?.length, 1);
+});
+
 test('paginação mantém os filtros', () => {
   const dono = concedente();
   const todos = Array.from({ length: 51 }, (_, i) => convenio(dono, `PR-${String(i).padStart(3, '0')}/2026`));
