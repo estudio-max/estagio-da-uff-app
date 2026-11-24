@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   firebase_core: ^5.1.0
   firebase_auth: ^7.0.1
+  # Só para ler a versão do SDK JS que o plugin carrega (lib/dados/emulador_auth_web.dart).
+  firebase_core_web: ^4.1.0
   cloud_firestore: ^7.1.0
   flutter_localizations:
     sdk: flutter

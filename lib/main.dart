@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'auth/login_page.dart';
+import 'dados/emulador_auth.dart';
 import 'dados/firestore_repositorio.dart';
 import 'dados/importacao.dart';
 import 'dados/painel.dart';
@@ -80,14 +81,19 @@ Future<void> _sincronizarPapel(User user) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // No emulador Android, o host da máquina é 10.0.2.2.
+  final host = !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+      ? '10.0.2.2'
+      : '127.0.0.1';
+  if (!_nuvem) {
+    // Na web, a sessão guardada é restaurada dentro de initializeApp; o Auth
+    // precisa estar no emulador antes disso (ver emulador_auth_web.dart).
+    await prepararAuthNoEmulador(_opcoesEmulador, host: host, porta: 9099);
+  }
   await Firebase.initializeApp(
     options: _nuvem ? _opcoesNuvem : _opcoesEmulador,
   );
   if (!_nuvem) {
-    // No emulador Android, o host da máquina é 10.0.2.2.
-    final host = !kIsWeb && defaultTargetPlatform == TargetPlatform.android
-        ? '10.0.2.2'
-        : '127.0.0.1';
     await FirebaseAuth.instance.useAuthEmulator(host, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
     _functions.useFunctionsEmulator(host, 5001);
