@@ -14,28 +14,32 @@ Para quem trabalha na **Divisão de Estágio** e vai cadastrar e acompanhar os c
 ## 1. Como entrar
 
 1. Abra o endereço do sistema no navegador (Chrome, Edge ou Firefox, no computador ou no celular).
-2. Digite seu **e-mail** e sua **senha**.
-3. Toque em **Entrar**.
+2. Toque em **Entrar com a conta Google da UFF** e escolha sua conta `@id.uff.br`.
+3. Quem recebeu e-mail e senha de demonstração usa os campos de baixo e toca em **Entrar**.
 
 Se aparecer "E-mail ou senha inválidos", confira se digitou certo (cuidado com letras maiúsculas e minúsculas na senha) e tente de novo. Se continuar, peça uma nova senha a quem administra o sistema.
 
 Se aparecer "Este usuário não pertence à Divisão de Estágio e não tem acesso", seu usuário ainda não foi liberado. Fale com quem administra.
 
-Para **sair**, toque no ícone de porta com seta, no canto superior direito.
+Para **sair**, toque no ícone de porta com seta: no computador, ao lado do seu nome, no pé do menu à esquerda; no celular, no canto superior direito.
 
 ## 2. A tela principal
 
-Embaixo da tela há duas abas:
+No computador, o menu fica à esquerda; no celular, as mesmas seções ficam embaixo da tela:
 
 - **Convênios**: a lista de todos os convênios.
 - **Concedentes**: as empresas e instituições cadastradas.
+- **Painel**: os números gerais (quantos vigentes, quantos vencem, tempo de tramitação).
+
+O menu continua à vista quando você abre um convênio. Tocar de novo na seção em que você está volta para o começo dela.
 
 ## 3. Procurar um convênio
 
-Na aba **Convênios**:
+Na seção **Convênios**:
 
+- **Resumo:** os quatro quadros do alto mostram quantos convênios estão vigentes, vencem em 30 dias, estão em tramitação e venceram. Toque num quadro para ver só esses. O de 30 dias fica laranja quando há algum.
 - **Busca:** digite no campo de cima parte do nome da concedente, o número do convênio (por exemplo, `PR-212/2026`) ou o número do processo SEI. A lista se ajusta enquanto você digita.
-- **Filtros:** toque em um dos botões abaixo da busca para ver só um tipo de convênio. Toque em **Todos** para voltar a ver tudo.
+- **Filtros:** toque em um dos botões abaixo da busca para ver só um tipo de convênio; cada botão mostra quantos há. Toque em **Todos** para voltar a ver tudo.
 - **Vence em:** na linha de baixo, escolha **até 30 dias**, **até 90 dias**, **até 180 dias** ou **até 365 dias** para ver só os convênios vigentes que vencem nesse prazo. Toque de novo no mesmo botão para tirar o filtro.
 
 O que significa cada etiqueta colorida:
@@ -48,12 +52,15 @@ O que significa cada etiqueta colorida:
 | **Em tramitação** (laranja) | Ainda está sendo preparado; ainda não foi finalizado. |
 | **Cancelado** (cinza) | Foi cancelado (por exemplo, cadastrado por engano). |
 
+Em cada convênio, a barra mostra quanto da vigência já passou. Quando faltam 90 dias ou menos, aparece "Vence em … dias" (em laranja a partir de 30 dias); também aparecem "Começa em … dias" e "Venceu há … dias".
+
 ## 4. Ver os detalhes de um convênio
 
 Toque no convênio na lista. Você verá:
 
-- os **dados** (número, processo SEI, datas de vigência, situação, tipo de minuta, objeto, observações);
-- o **andamento do processo**, com cada etapa e a data;
+- a **vigência** numa linha do tempo, com o início, hoje e o fim, e quanto falta;
+- os **dados** (situação, tipo de minuta, origem, objeto, observações);
+- o **andamento do processo**, com cada etapa em sequência e a data;
 - os **alertas de vencimento enviados**: todo dia o sistema avisa a Divisão por e-mail quando um convênio fica a 365, 180, 90 ou 30 dias do fim, uma vez em cada prazo; aqui aparece cada aviso e quando foi mandado;
 - o **histórico de alterações**, do mais novo para o mais antigo.
 
@@ -63,7 +70,7 @@ Para voltar à lista, use a seta no canto superior esquerdo.
 
 **Antes de cadastrar um convênio, a empresa ou instituição precisa estar cadastrada.**
 
-1. Abra a aba **Concedentes** e toque em **Nova concedente**.
+1. Abra a seção **Concedentes** e toque em **Nova concedente**.
 2. Preencha:
    - **CPF ou CNPJ:** pode digitar com ou sem pontos e traços. Profissional liberal (pessoa física) usa o CPF.
    - **Razão social / nome:** o nome oficial.
@@ -79,7 +86,7 @@ Para **corrigir** os dados de uma concedente, toque nela na lista, altere e salv
 
 ## 6. Cadastrar um novo convênio
 
-1. Na aba **Convênios**, toque em **Novo convênio**.
+1. Na seção **Convênios**, toque em **Novo convênio** (no computador, no alto à direita; no celular, embaixo).
 2. Escolha a **Concedente** na lista.
 3. Preencha o que já souber:
    - **Nº do convênio** (exemplo: `PR-212/2026`).

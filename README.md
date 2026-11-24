@@ -60,7 +60,7 @@ FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node functions/lib/importarCli.js conveni
 
 O relatório de rejeitados e avisos sai em `reports/importacao.csv` (separado por `;`, abre no Excel).
 
-Pelo app, a Divisão usa o menu **Importar convênios** na barra do topo (opção "Página do estagio.uff.br"): escolhe o XML, simula (nada é gravado), confere as contagens, salva o relatório se quiser e só então importa, com confirmação. O app chama a Function `importarConveniosDrupal`, que só aceita o papel `divisao`; localmente, ela roda no emulador de Functions.
+Pelo app, a Divisão usa **Importar convênios** no menu lateral (no celular, o ícone de envio no topo) (opção "Página do estagio.uff.br"): escolhe o XML, simula (nada é gravado), confere as contagens, salva o relatório se quiser e só então importa, com confirmação. O app chama a Function `importarConveniosDrupal`, que só aceita o papel `divisao`; localmente, ela roda no emulador de Functions.
 
 ### Importar as planilhas da Divisão no emulador (RF07, D28)
 

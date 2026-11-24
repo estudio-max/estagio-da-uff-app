@@ -13,6 +13,7 @@ import 'dados/painel.dart';
 import 'dados/repositorio.dart';
 import 'telas/home.dart';
 import 'telas/importacao.dart';
+import 'telas/tema.dart';
 
 // Projeto fictício do Emulator Suite: nada aponta para a nuvem.
 const _opcoesEmulador = FirebaseOptions(
@@ -147,23 +148,23 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Estágios UFF',
-    theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+    theme: temaEstagios(),
     locale: const Locale('pt', 'BR'),
     supportedLocales: const [Locale('pt', 'BR')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     builder: (context, child) => Column(
       children: [
         if (demo)
-          Material(
-            color: Colors.amber.shade200,
-            child: const SizedBox(
+          const Material(
+            color: Cores.avisoFundo,
+            child: SizedBox(
               width: double.infinity,
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
+                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                 child: Text(
                   'Demonstração: protótipo com dados fictícios',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Colors.black87),
+                  style: TextStyle(fontSize: 13, color: Cores.avisoTexto),
                 ),
               ),
             ),
@@ -196,6 +197,7 @@ class App extends StatelessWidget {
             onSair: auth.signOut,
             telasImportacao: telasImportacao,
             painel: painel,
+            usuario: user.displayName ?? user.email,
           ),
         );
       },
