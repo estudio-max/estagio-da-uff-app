@@ -180,7 +180,8 @@ const ESTILO_LISTA = `
     border-radius: var(--raio); box-shadow: var(--sombra); overflow: hidden; }
   th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--borda); vertical-align: top; }
   th { font-size: .85rem; font-weight: 500; color: var(--suave); background: var(--darkened-bg); }
-  td small { color: var(--suave); display: block; }
+  td .fantasia, td small { display: block; }
+  td small { color: var(--suave); }
   td[data-rotulo="Nº"] { white-space: nowrap; }
   .vazio { background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra); padding: 32px; text-align: center; }
   .paginas { display: flex; gap: 16px; justify-content: center; align-items: center; margin-top: 20px; }
@@ -245,13 +246,15 @@ function opcoes(valores: [string, string][], atual: string, rotuloTodos: string)
 function linha(c: ConvenioPublico, hoje: string): string {
   const k = c.concedente;
   const doc = documentoPublico(k.documento);
+  // Razão social sempre, com o nome fantasia logo abaixo quando houver.
+  const fantasia = k.nome_fantasia ? `\n        <span class="fantasia">${esc(k.nome_fantasia)}</span>` : '';
   const selo =
     vigenciaPublica(c, hoje) === 'a_iniciar'
       ? `<br><span class="selo selo-futuro">A partir de ${dataBr(c.inicio_vigencia!)}</span>`
       : '';
   return `    <tr>
       <td>
-        <a href="${linkDetalhe(c)}">${esc(k.razao_social)}</a>${doc ? `\n        <small>${doc}</small>` : ''}
+        <a href="${linkDetalhe(c)}">${esc(k.razao_social)}</a>${fantasia}${doc ? `\n        <small>${doc}</small>` : ''}
       </td>
       <td data-rotulo="Nº">${esc(c.numero)}</td>
       <td data-rotulo="Vigência">
