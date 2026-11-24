@@ -7,9 +7,11 @@ import { somarDias } from './alertas.js';
 import {
   type ConcedentePublica,
   type ConvenioPublico,
+  andamento,
   dataLonga,
   documentoPublico,
   responder,
+  tempoRestante,
 } from './paginaPublica.js';
 
 const HOJE = '2026-10-06';
@@ -265,4 +267,49 @@ test('convênio vigente não tem selo de futuro', () => {
   const c = convenio(concedente());
   assert.ok(!pagina([c]).includes('A partir de'));
   assert.ok(detalhe([c], c).includes('>Vigente<'));
+});
+
+// --- Visual da Divisão: prazo e barra da vigência (como na lista do app) ---
+
+test('prazo do convênio: vence em, começa em e fração decorrida', () => {
+  const dono = concedente();
+  const longe = andamento(convenio(dono), HOJE);
+  assert.equal(longe.prazo, null); // acima de 90 dias, só a barra
+  assert.ok(longe.fracao > 0 && longe.fracao < 1);
+  assert.deepEqual(andamento(convenio(dono, 'PR-1/2026', { fim_vigencia: somarDias(HOJE, 90) }), HOJE).prazo, 'Vence em 90 dias');
+  const urgente = andamento(convenio(dono, 'PR-1/2026', { fim_vigencia: somarDias(HOJE, 30) }), HOJE);
+  assert.equal(urgente.prazo, 'Vence em 30 dias');
+  assert.equal(urgente.urgente, true);
+  assert.equal(andamento(convenio(dono, 'PR-1/2026', { fim_vigencia: somarDias(HOJE, 31) }), HOJE).urgente, false);
+  assert.equal(andamento(convenio(dono, 'PR-1/2026', { fim_vigencia: HOJE }), HOJE).prazo, 'Vence hoje');
+  const futuro = andamento(convenio(dono, 'PR-1/2026', { inicio_vigencia: somarDias(HOJE, 1) }), HOJE);
+  assert.deepEqual(futuro, { fracao: 0, prazo: 'Começa em 1 dia', urgente: false });
+});
+
+test('tempo restante em anos e meses, ou dias abaixo de um mês', () => {
+  assert.equal(tempoRestante('2026-10-06', '2027-12-06'), '1 ano e 2 meses');
+  assert.equal(tempoRestante('2026-10-06', '2028-10-05'), '1 ano e 11 meses');
+  assert.equal(tempoRestante('2026-10-06', '2026-11-06'), '1 mês');
+  assert.equal(tempoRestante('2026-10-06', '2026-11-05'), '30 dias');
+});
+
+test('lista mostra o prazo; detalhe mostra o tempo restante', () => {
+  const perto = convenio(concedente(), 'PR-1/2026', { fim_vigencia: somarDias(HOJE, 12) });
+  assert.ok(pagina([perto]).includes('Vence em 12 dias'));
+  const longe = convenio(concedente(), 'PR-2/2026', { fim_vigencia: '2027-12-06' });
+  assert.ok(detalhe([longe], longe).includes('Faltam 1 ano e 2 meses'));
+  assert.ok(!pagina([longe]).includes('Vence em'));
+});
+
+test('resumo conta vigentes, a iniciar e concedentes', () => {
+  const alfa = concedente('11222333000181', { razao_social: 'Alfa' });
+  const beta = concedente('12ABC34501DE35', { razao_social: 'Beta' });
+  const html = pagina([
+    convenio(alfa, 'PR-1/2026'),
+    convenio(alfa, 'PR-2/2026'),
+    convenio(beta, 'PR-3/2026', { inicio_vigencia: somarDias(HOJE, 5) }),
+  ]);
+  assert.ok(html.includes('<dt>Vigentes</dt><dd>2</dd>'));
+  assert.ok(html.includes('<dt>A iniciar</dt><dd>1</dd>'));
+  assert.ok(html.includes('<dt>Concedentes</dt><dd>2</dd>'));
 });
